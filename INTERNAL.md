@@ -15,11 +15,18 @@
 
 ```
 yi-fanyi/
+├── AGENTS.md                ← Agent 协作入口（多会话接续，必读）
 ├── README.md                ← GitHub 公开 README（对外部访客）
 ├── INTERNAL.md              ← 本文件（产品线内部索引）
 ├── PRD_v2.0.md              ← 产品需求（9 节，仅需求：流程/功能/交互/设计/异常/非功能）
 ├── roadmap.md               ← 实施路线图（按优先级展开）
-├── next_steps.md            ← Kimi 提的三步选项决策记录
+├── next_steps.md            ← 三步选项决策记录
+├── docs/                    ← 接续中枢（多 Agent / 多会话）
+│   ├── CONTEXT.md           ← 进度唯一真相源（离开前必更新）
+│   ├── TASKS.md             ← 任务池（状态/依赖/验收）
+│   ├── CONVENTIONS.md       ← 文档、命名、commit、分支约定
+│   ├── SESSIONS.md          ← 会话回执索引 + 模板
+│   └── sessions/            ← 每次会话的回执文件
 ├── competitors/             ← 竞品分析
 │   ├── typeless.md
 │   ├── chatterfly.md
@@ -57,15 +64,11 @@ P1：Whisper 本地、OCR、风格选择、Profile 路由、Skill 模板、历�
 
 ## 状态
 
-- [x] PRD v2.0 完整记录（2026-09-26）
-- [ ] 竞品深度调研（typeless/chatterfly/bob/spokenly）
-- [ ] 设计稿（Kimi 选项 ①）
-- [ ] Provider 接口定义（Kimi 选项 ②）
-- [ ] 页面字段级原型（Kimi 选项 ③）
-- [ ] Flutter 工程脚手架
-- [ ] macOS MVP 验证（先做一端跑通）
+> 进度与任务的唯一真相源是 `docs/CONTEXT.md` 与 `docs/TASKS.md`，本文件不再重复维护状态清单。
 
-详见 `roadmap.md` 和 `next_steps.md`。
+- 进度快照：`docs/CONTEXT.md`
+- 任务池：`docs/TASKS.md`
+- 规划与下一步：`roadmap.md`、`next_steps.md`
 
 ## 内部备注
 

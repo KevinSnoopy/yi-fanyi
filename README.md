@@ -22,20 +22,16 @@
 - [`competitors/`](./competitors/) — 竞品分析（Typeless / Chatterfly / Bob）
 - [`decisions/`](./decisions/) — 4 个关键产品决策 ADR
 - [`assets/`](./assets/) — 原始 PRD docx 备份
+- [`AGENTS.md`](./AGENTS.md) — 协作入口（参与开发的 Agent 必读）
+- [`docs/`](./docs/) — 进度快照 `CONTEXT.md`、任务池 `TASKS.md`、约定与会话回执
 
 ## 状态
 
-**Phase 0 · 决策与设计**（进行中）
+**Phase 0 · 决策与设计**（进行中，暂无产品代码）
 
-- [x] PRD v2.0 完整记录
-- [x] 4 个核心 ADR（BYOK / 买断 / 五端 / Flutter）
-- [x] 竞品初步调研
-- [ ] 设计稿（Kimi 选项 ①）
-- [ ] Provider 接口实现（Kimi 选项 ②）
-- [ ] 字段级页面原型（Kimi 选项 ③）
-- [ ] macOS MVP
-
-详见 [`roadmap.md`](./roadmap.md)。
+- 当前进度：[`docs/CONTEXT.md`](./docs/CONTEXT.md)
+- 任务池：[`docs/TASKS.md`](./docs/TASKS.md)
+- 长期规划：[`roadmap.md`](./roadmap.md)
 
 ## License
 

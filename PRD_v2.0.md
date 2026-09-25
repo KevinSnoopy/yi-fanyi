@@ -280,3 +280,4 @@
 | [`decisions/`](./decisions/) | ADR-001 BYOK、ADR-002 买断定价、ADR-003 五端覆盖、ADR-004 Flutter 技术栈 |
 | [`competitors/`](./competitors/) | 竞品分析：Typeless / Chatterfly / Bob |
 | [`next_steps.md`](./next_steps.md) | 下一步选项决策记录 |
+| [`AGENTS.md`](./AGENTS.md) | 协作入口；进度与任务见 `docs/CONTEXT.md`、`docs/TASKS.md` |
