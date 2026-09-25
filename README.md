@@ -16,7 +16,7 @@
 
 ## 文档结构
 
-- [`PRD_v2.0.md`](./PRD_v2.0.md) — 完整产品需求文档（11 节，PRD v2.0）
+- [`PRD_v2.0.md`](./PRD_v2.0.md) — 产品需求文档（9 节，仅需求；路线图与商业模式已拆分）
 - [`roadmap.md`](./roadmap.md) — 5 阶段实施路线图
 - [`next_steps.md`](./next_steps.md) — Kimi 三选项决策框架
 - [`competitors/`](./competitors/) — 竞品分析（Typeless / Chatterfly / Bob）

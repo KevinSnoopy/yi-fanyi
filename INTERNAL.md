@@ -17,7 +17,7 @@
 yi-fanyi/
 ├── README.md                ← GitHub 公开 README（对外部访客）
 ├── INTERNAL.md              ← 本文件（产品线内部索引）
-├── PRD_v2.0.md              ← 完整产品需求（Kimi 输出，已结构化）
+├── PRD_v2.0.md              ← 产品需求（9 节，仅需求：流程/功能/交互/设计/异常/非功能）
 ├── roadmap.md               ← 实施路线图（按优先级展开）
 ├── next_steps.md            ← Kimi 提的三步选项决策记录
 ├── competitors/             ← 竞品分析
