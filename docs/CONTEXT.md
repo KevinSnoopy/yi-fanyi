@@ -48,5 +48,5 @@ has_code: false
 
 - 仓库默认分支 `master`，公开仓库 `KevinSnoopy/yi-fanyi`
 - 文档全部为中文，Markdown 格式约定见 [`CONVENTIONS.md`](./CONVENTIONS.md)
-- 沙箱/容器内若 `git push` 报 TLS 握手失败，通常是 DNS 被劫持（github.com 解析到内网 IP），把 GitHub 真实 IP 写入 `/etc/hosts` 即可恢复
+- 沙箱/容器内 `git push` 报 TLS 握手失败（`gnutls_handshake() failed`）时：先把 GitHub 真实 IP 写入 `/etc/hosts`（DNS 常被劫持到内网段）；仍失败则加 `-c http.version=HTTP/1.1` 再推，通常可绕过
 - 不要在仓库中提交任何 Key、Token、个人凭据
