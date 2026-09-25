@@ -1,0 +1,74 @@
+# Build artifacts
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Flutter generated
+*.g.dart
+*.freezed.dart
+l10n/
+
+# Native build
+*.o
+*.so
+*.dylib
+*.dll
+*.exe
+*.app
+*.dSYM/
+Pods/
+node_modules/
+
+# OS
+.DS_Store
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Editors
+*.swp
+*.swo
+*~
+.history
+.bundle/
+vendor/bundle
+coverage/
+
+# Local config (user keys, profiles)
+*.local
+.env
+.env.*
+!.env.example
+
+# Build outputs
+dist/
+out/
+*.log
+
+# Secrets / credentials
+*.pem
+*.key
+*.keystore
+google-services.json
+GoogleService-Info.plist
+
+# IDEs
+.metals/
+.bloop/
+.ammonite/
+
+# Backup files
+*.bak
+*.tmp
+*.orig
