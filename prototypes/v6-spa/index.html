@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="译语 · 全平台 BYOK AI 语音翻译键盘原型演示 · v6 全量 13 页" />
+<meta name="theme-color" content="#4F7CFF" />
+<title>译语 v6 · 13 页全量演示</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234F7CFF'/%3E%3Ctext x='32' y='44' text-anchor='middle' fill='white' font-family='sans-serif' font-size='36' font-weight='600'%3E译%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<!-- ============ 顶部 macOS 菜单栏 ============ -->
+<div class="menubar" role="banner">
+  <div class="menubar-left">
+    <span class="menubar-apple" aria-hidden="true"></span>
+    <span class="menubar-app" aria-current="page">译语</span>
+    <span class="menubar-item" role="menuitem">文件</span>
+    <span class="menubar-item" role="menuitem">编辑</span>
+    <span class="menubar-item" role="menuitem">视图</span>
+    <span class="menubar-item" role="menuitem">窗口</span>
+    <span class="menubar-item" role="menuitem">帮助</span>
+  </div>
+  <div class="menubar-right">
+    <span class="menubar-icon" title="Wi-Fi" aria-label="Wi-Fi">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 11.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM5 9.4a4.2 4.2 0 016 0l-.85.85a3 3 0 00-4.3 0L5 9.4zM2.8 7.2a7.8 7.8 0 0110.4 0l-.85.86a6.6 6.6 0 00-8.7 0l-.85-.86z"/></svg>
+    </span>
+    <span class="menubar-icon" title="电池" aria-label="电池 87%">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="1" y="5" width="11" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1"/><rect x="2.5" y="6.5" width="7" height="3" fill="currentColor"/><rect x="12.5" y="6.5" width="1" height="3" fill="currentColor"/></svg>
+    </span>
+    <span class="menubar-icon" title="搜索" aria-label="搜索">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M11 7a4 4 0 11-8 0 4 4 0 018 0zm-1.4 3.5a5 5 0 111.4-1.4l3 3-1.4 1.4-3-3z"/></svg>
+    </span>
+    <span class="menubar-icon" title="控制中心" aria-label="控制中心">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="4" cy="4" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="4" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="8" cy="8" r="2.5"/></svg>
+    </span>
+    <button class="menubar-icon lingual" id="lingualIcon" aria-haspopup="dialog" aria-expanded="false" title="译语 · 当前在线">
+      <span class="lingual-pill" aria-hidden="true">
+        <span class="lingual-bar a"></span>
+        <span class="lingual-bar b"></span>
+        <span class="lingual-bar c"></span>
+        <span class="lingual-bar d"></span>
+      </span>
+      <span class="lingual-status" aria-hidden="true"></span>
+    </button>
+    <time class="menubar-clock" id="menubarClock" datetime="2026-09-26T14:32">周六 14:32</time>
+  </div>
+</div>
+
+<!-- ============ 译语菜单栏 Popover ============ -->
+<div class="lingual-popover" id="lingualPopover" role="dialog" aria-labelledby="popover-title" hidden>
+  <div class="popover-head">
+    <div class="popover-title">
+      <strong id="popover-title">译语</strong>
+      <span class="popover-sub">按住 <kbd>Fn</kbd> 说话 · <kbd>⌥ Space</kbd> 唤起悬浮窗</span>
+    </div>
+    <span class="popover-dot ok" aria-label="在线"></span>
+  </div>
+  <div class="popover-section">
+    <div class="popover-row">
+      <span>当前模型</span>
+      <span class="popover-val">Ollama · qwen2.5:7b</span>
+    </div>
+    <div class="popover-row">
+      <span>语言方向</span>
+      <span class="popover-val"><button type="button" style="all:unset;cursor:pointer;color:var(--brand)">中文 → English ⇄</button></span>
+    </div>
+    <div class="popover-row">
+      <span>今日调用</span>
+      <span class="popover-val">42 次 · 本地 0 ¥</span>
+    </div>
+  </div>
+  <!-- v6 补全（PRD §6 #13 / ADR-005）：最近一条译文 + 复制/注入按钮 -->
+  <div class="popover-divider" role="separator"></div>
+  <div class="popover-recent" aria-label="最近一条译文">
+    <div class="pocr-label">最近一条 · 刚刚 · A 流程</div>
+    <div class="pocr-src">那个报价我确认没问题，下周三之前可以签合同。</div>
+    <div class="pocr-tgt">Confirmed, no problem with the quote. We can sign the contract before next Wednesday.</div>
+    <div class="pocr-actions">
+      <button type="button" id="popoverCopy">📋 复制</button>
+      <button type="button" id="popoverInject" class="primary">⤓ 注入</button>
+    </div>
+  </div>
+  <div class="popover-divider" role="separator"></div>
+  <div class="popover-list" role="group" aria-label="翻译流程">
+    <button type="button" class="popover-item" data-trigger="A">🎙 按住说话（<kbd>Fn</kbd>）</button>
+    <button type="button" class="popover-item" data-trigger="B">⌨ 悬浮窗翻译（<kbd>⌥ Space</kbd>）</button>
+    <button type="button" class="popover-item" data-trigger="C">⌖ 划词翻译（<kbd>⌥ D</kbd>）</button>
+    <button type="button" class="popover-item" data-trigger="D">⤓ 静默替换（<kbd>⌥ Return</kbd>）</button>
+    <button type="button" class="popover-item" data-trigger="E">✂ 截图 OCR（<kbd>⌥ S</kbd>）</button>
+  </div>
+  <div class="popover-divider" role="separator"></div>
+  <div class="popover-list" role="group" aria-label="设置">
+    <button type="button" class="popover-item">⚙ 模型配置…</button>
+    <button type="button" class="popover-item">📖 术语表…</button>
+    <button type="button" class="popover-item">⏱ 历史记录…</button>
+  </div>
+  <div class="popover-divider" role="separator"></div>
+  <div class="popover-list" role="group" aria-label="系统">
+    <label class="popover-item toggle">
+      <span>开机自启</span>
+      <span class="mini-switch">
+        <input type="checkbox" checked aria-label="开机自启" />
+        <span class="ms-track"><span class="ms-thumb"></span></span>
+      </span>
+    </label>
+    <label class="popover-item toggle">
+      <span>隐私锁</span>
+      <span class="mini-switch">
+        <input type="checkbox" aria-label="隐私锁" />
+        <span class="ms-track"><span class="ms-thumb"></span></span>
+      </span>
+    </label>
+  </div>
+  <div class="popover-foot">
+    <button type="button" class="popover-foot-btn quit">退出译语</button>
+  </div>
+</div>
+
+<!-- ============ 主舞台 ============ -->
+<main class="stage">
+  <nav class="stage-tabs" role="tablist" aria-label="演示流程">
+    <button class="stage-tab active" data-tab="A" role="tab" aria-selected="true" id="tab-A" aria-controls="stageCanvas">
+      <span class="tab-letter">A</span>
+      <span class="tab-name">语音输入</span>
+      <span class="tab-pill" data-priority="P0">P0</span>
+    </button>
+    <button class="stage-tab" data-tab="B" role="tab" aria-selected="false" id="tab-B" aria-controls="stageCanvas">
+      <span class="tab-letter">B</span>
+      <span class="tab-name">悬浮窗</span>
+      <span class="tab-pill" data-priority="P0">P0</span>
+    </button>
+    <button class="stage-tab" data-tab="C" role="tab" aria-selected="false" id="tab-C" aria-controls="stageCanvas">
+      <span class="tab-letter">C</span>
+      <span class="tab-name">划词翻译</span>
+      <span class="tab-pill" data-priority="P0">P0</span>
+    </button>
+    <button class="stage-tab" data-tab="D" role="tab" aria-selected="false" id="tab-D" aria-controls="stageCanvas">
+      <span class="tab-letter">D</span>
+      <span class="tab-name">静默替换</span>
+      <span class="tab-pill" data-priority="P0">P0</span>
+    </button>
+    <button class="stage-tab" data-tab="E" role="tab" aria-selected="false" id="tab-E" aria-controls="stageCanvas">
+      <span class="tab-letter">E</span>
+      <span class="tab-name">截图 OCR</span>
+      <span class="tab-pill" data-priority="P1">P1</span>
+    </button>
+    <button class="stage-tab" data-tab="F" role="tab" aria-selected="false" id="tab-F" aria-controls="stageCanvas">
+      <span class="tab-letter">F</span>
+      <span class="tab-name">隐私锁</span>
+      <span class="tab-pill" data-priority="P0">P0</span>
+    </button>
+    <button class="stage-tab" data-tab="G" role="tab" aria-selected="false" id="tab-G" aria-controls="stageCanvas">
+      <span class="tab-letter">G</span>
+      <span class="tab-name">移动键盘</span>
+      <span class="tab-pill" data-priority="P1">P1</span>
+    </button>
+    <button class="stage-tab" data-tab="H" role="tab" aria-selected="false" id="tab-H" aria-controls="stageCanvas">
+      <span class="tab-letter">H</span>
+      <span class="tab-name">主窗首页</span>
+      <span class="tab-pill" data-priority="P1">P1</span>
+    </button>
+    <button class="stage-tab" data-tab="I" role="tab" aria-selected="false" id="tab-I" aria-controls="stageCanvas">
+      <span class="tab-letter">I</span>
+      <span class="tab-name">模型配置</span>
+      <span class="tab-pill" data-priority="P0">P0</span>
+    </button>
+    <button class="stage-tab" data-tab="J" role="tab" aria-selected="false" id="tab-J" aria-controls="stageCanvas">
+      <span class="tab-letter">J</span>
+      <span class="tab-name">快捷键</span>
+      <span class="tab-pill" data-priority="P0">P0</span>
+    </button>
+    <button class="stage-tab" data-tab="K" role="tab" aria-selected="false" id="tab-K" aria-controls="stageCanvas">
+      <span class="tab-letter">K</span>
+      <span class="tab-name">偏好/术语/Skills</span>
+      <span class="tab-pill" data-priority="P0">P0</span>
+    </button>
+    <button class="stage-tab" data-tab="L" role="tab" aria-selected="false" id="tab-L" aria-controls="stageCanvas">
+      <span class="tab-letter">L</span>
+      <span class="tab-name">首次引导</span>
+      <span class="tab-pill" data-priority="P0">P0</span>
+    </button>
+    <button class="stage-tab" data-tab="M" role="tab" aria-selected="false" id="tab-M" aria-controls="stageCanvas">
+      <span class="tab-letter">M</span>
+      <span class="tab-name">移动 App</span>
+      <span class="tab-pill" data-priority="P1">P1</span>
+    </button>
+  </nav>
+
+  <div class="stage-canvas" id="stageCanvas" role="tabpanel" aria-labelledby="tab-A">
+    <!-- 宿主应用：演示"任意输入框" -->
+    <div class="host-app">
+      <div class="host-titlebar">
+        <span class="traffic-light" data-tl="close" aria-hidden="true"></span>
+        <span class="traffic-light" data-tl="min" aria-hidden="true"></span>
+        <span class="traffic-light" data-tl="max" aria-hidden="true"></span>
+        <span class="host-title" id="hostTitle">WhatsApp · 给 Daniel 的消息</span>
+      </div>
+      <div class="host-body">
+        <div class="host-thread" id="hostThread">
+          <div class="msg msg-them">
+            <div class="msg-meta">Daniel · 14:28</div>
+            <div class="msg-bubble">Hi Kevin, can you confirm the quote by Wednesday? We want to sign the contract before next Friday.</div>
+          </div>
+          <div class="msg msg-them">
+            <div class="msg-meta">Daniel · 14:29</div>
+            <div class="msg-bubble">If the price is right, we're ready to move forward.</div>
+          </div>
+        </div>
+        <div class="host-input-wrap">
+          <textarea class="host-input" id="hostInput" placeholder="输入消息…（演示中：在任意位置点击即代表在输入框内）">我想确认一下，报价没问题的话，下周三之前能签合同。</textarea>
+          <div class="host-input-bar">
+            <span class="host-hint">按 <kbd>Fn</kbd> 说话 · 译文自动替换 · <kbd>Esc</kbd> 取消</span>
+            <span class="host-status">⇄ 已发送 2 条</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 演示组件叠层 -->
+    <div class="stage-overlay" id="stageOverlay" aria-live="polite"></div>
+
+    <!-- 演示控制面板 -->
+    <div class="demo-controls" id="demoControls">
+      <div class="demo-controls-title">演示控制</div>
+      <div class="demo-controls-row" id="demoStateRow"></div>
+      <div class="demo-controls-row">
+        <button type="button" id="demoPlay">▶ 重放</button>
+        <button type="button" id="demoReset">↺ 重置</button>
+      </div>
+    </div>
+
+    <!-- 提示条 -->
+    <div class="demo-hint" id="demoHint" hidden></div>
+  </div>
+</main>
+
+<!-- ============ 右侧设置抽屉 ============ -->
+<aside class="settings" id="settings" aria-label="设置">
+  <div class="settings-head">
+    <div class="settings-tabs" role="tablist" aria-label="设置分类">
+      <button class="settings-tab active" data-stab="model" role="tab" aria-selected="true">模型</button>
+      <button class="settings-tab" data-stab="term" role="tab" aria-selected="false">术语</button>
+      <button class="settings-tab" data-stab="hot" role="tab" aria-selected="false">热键</button>
+      <button class="settings-tab" data-stab="voice" role="tab" aria-selected="false">语音</button>
+      <button class="settings-tab" data-stab="about" role="tab" aria-selected="false">关于</button>
+    </div>
+    <button class="settings-close" id="settingsClose" type="button" aria-label="折叠设置"></button>
+  </div>
+
+  <div class="settings-body">
+    <!-- 模型 -->
+    <section class="settings-pane active" data-pane="model" role="tabpanel">
+      <div class="settings-h1">模型配置</div>
+      <div class="settings-sub">配置完全本地保存；请求直连模型方，不走我方服务器。</div>
+
+      <div class="settings-h2">当前默认</div>
+      <div class="current-model">
+        <div class="cm-logo" aria-hidden="true">⌬</div>
+        <div class="cm-info">
+          <div class="cm-name">Ollama · qwen2.5:7b</div>
+          <div class="cm-meta">本地 · 离线 · 零延迟</div>
+        </div>
+        <span class="badge live">在线</span>
+      </div>
+
+      <div class="settings-h2">已添加的 Provider</div>
+      <div class="provider-list">
+        <div class="provider-row">
+          <div class="pr-logo" style="background:#10A37F">O</div>
+          <div class="pr-info"><div class="pr-name">OpenAI</div><div class="pr-host">gpt-4o-mini · 342ms</div></div>
+          <span class="dot ok" aria-label="健康"></span>
+        </div>
+        <div class="provider-row">
+          <div class="pr-logo" style="background:#D97757">C</div>
+          <div class="pr-info"><div class="pr-name">Claude</div><div class="pr-host">claude-sonnet-4 · 512ms</div></div>
+          <span class="dot ok" aria-label="健康"></span>
+        </div>
+        <div class="provider-row">
+          <div class="pr-logo" style="background:#000">⌬</div>
+          <div class="pr-info"><div class="pr-name">Ollama（本地）</div><div class="pr-host">qwen2.5:7b · 0ms</div></div>
+          <span class="dot ok" aria-label="健康"></span>
+        </div>
+      </div>
+      <button type="button" class="settings-btn ghost full">＋ 添加 Provider</button>
+
+      <div class="settings-h2">术语表注入</div>
+      <div class="settings-row">
+        <span class="settings-label">向 prompt 注入术语表</span>
+        <label class="switch"><input type="checkbox" checked aria-label="向 prompt 注入术语表" /><span class="sw-track"><span class="sw-thumb"></span></span></label>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">术语命中数提示</span>
+        <label class="switch"><input type="checkbox" checked aria-label="术语命中数提示" /><span class="sw-track"><span class="sw-thumb"></span></span></label>
+      </div>
+    </section>
+
+    <!-- 术语 -->
+    <section class="settings-pane" data-pane="term" role="tabpanel" hidden>
+      <div class="settings-h1">术语表</div>
+      <div class="settings-sub">注入到 prompt，防止专名错译；支持按场景分表。</div>
+
+      <div class="term-tabs" role="tablist">
+        <button class="term-tab active" data-term="通用" role="tab" aria-selected="true">通用 · 8</button>
+        <button class="term-tab" data-term="跨境电商" role="tab" aria-selected="false">跨境电商 · 12</button>
+        <button class="term-tab" data-term="法律合同" role="tab" aria-selected="false">法律合同 · 6</button>
+        <button class="term-tab" data-term="技术文档" role="tab" aria-selected="false">技术文档 · 24</button>
+      </div>
+
+      <div class="term-list" id="termList"></div>
+      <button type="button" class="settings-btn primary full">＋ 添加词条</button>
+      <button type="button" class="settings-btn ghost full">📤 导入 / 分享</button>
+    </section>
+
+    <!-- 热键 -->
+    <section class="settings-pane" data-pane="hot" role="tabpanel" hidden>
+      <div class="settings-h1">热键</div>
+      <div class="settings-sub">全部可改；冲突时红字提示占用方（PRD §4）。</div>
+
+      <div id="hotkeyList"></div>
+    </section>
+
+    <!-- 语音 -->
+    <section class="settings-pane" data-pane="voice" role="tabpanel" hidden>
+      <div class="settings-h1">语音</div>
+
+      <div class="settings-h2">转写引擎</div>
+      <div class="radio-row">
+        <label class="radio-card">
+          <input type="radio" name="stt" checked />
+          <div class="rc-body">
+            <div class="rc-name">本地 Whisper</div>
+            <div class="rc-meta">离线 · 零延迟 · 小</div>
+          </div>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="stt" />
+          <div class="rc-body">
+            <div class="rc-name">云端 STT</div>
+            <div class="rc-meta">按 Key 走 · 大模型精度</div>
+          </div>
+        </label>
+      </div>
+
+      <div class="settings-h2">成稿设置</div>
+      <div class="settings-row">
+        <span class="settings-label">去口头禅</span>
+        <label class="switch"><input type="checkbox" checked aria-label="去口头禅" /><span class="sw-track"><span class="sw-thumb"></span></span></label>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">自动补标点</span>
+        <label class="switch"><input type="checkbox" checked aria-label="自动补标点" /><span class="sw-track"><span class="sw-thumb"></span></span></label>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">预览窗口</span>
+        <select class="select" aria-label="预览窗口">
+          <option>1.2 秒后自动写入</option>
+          <option>总是预览</option>
+          <option>直接写入</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- 关于 -->
+    <section class="settings-pane" data-pane="about" role="tabpanel" hidden>
+      <div class="settings-h1">关于</div>
+      <div class="about-card">
+        <div class="about-logo" aria-hidden="true">译</div>
+        <div class="about-name">译语 / LinguaFlow</div>
+        <div class="about-ver" id="aboutVer">v0.9.0-beta · Pro</div>
+        <div class="about-meta">五端全覆盖 · BYOK · 零采集</div>
+      </div>
+
+      <div class="settings-h2">隐私</div>
+      <div class="privacy-row">
+        <div class="prv-icon" aria-hidden="true">🛡</div>
+        <div>
+          <div class="prv-name">零遥测</div>
+          <div class="prv-meta">所有调用直连模型方，不经我方服务器</div>
+        </div>
+        <label class="switch"><input type="checkbox" aria-label="零遥测" /><span class="sw-track"><span class="sw-thumb"></span></span></label>
+      </div>
+      <div class="privacy-row">
+        <div class="prv-icon" aria-hidden="true">🔒</div>
+        <div>
+          <div class="prv-name">隐私锁</div>
+          <div class="prv-meta">主窗需 FaceID / 密码</div>
+        </div>
+        <label class="switch"><input type="checkbox" aria-label="隐私锁" /><span class="sw-track"><span class="sw-thumb"></span></span></label>
+      </div>
+      <div class="privacy-row">
+        <div class="prv-icon" aria-hidden="true">🌐</div>
+        <div>
+          <div class="prv-name">断网提示</div>
+          <div class="prv-meta">自动切换离线模式</div>
+        </div>
+        <label class="switch"><input type="checkbox" checked aria-label="断网提示" /><span class="sw-track"><span class="sw-thumb"></span></span></label>
+      </div>
+    </section>
+  </div>
+</aside>
+
+<!-- ============ 底部状态条 ============ -->
+<footer class="statusbar" role="contentinfo">
+  <div class="statusbar-left">
+    <span class="dot ok" aria-hidden="true"></span>
+    <span>译语 <span id="statusVersion">v0.9.0-beta</span> · 模型 <strong>Ollama · qwen2.5:7b</strong> · 42 次 / 今日</span>
+  </div>
+  <div class="statusbar-right">
+    <span class="statusbar-mode">本地优先</span>
+    <span class="statusbar-mode">五端覆盖</span>
+    <span class="statusbar-mode accent">BYOK</span>
+  </div>
+</footer>
+
+<!-- ============ 走查指南（13 页演示路径） ============ -->
+<button type="button" class="tour-toggle" id="tourToggle" aria-expanded="false" aria-controls="tourPanel">❓ 走查</button>
+<div class="tour-panel" id="tourPanel" role="dialog" aria-label="走查指南" hidden>
+  <div class="tour-head">
+    <strong>走查指南 · 13 页全量</strong>
+    <button type="button" class="tour-close" id="tourClose" aria-label="关闭">✕</button>
+  </div>
+  <ol class="tour-list">
+    <li><strong>主流程</strong>：A 语音输入 → B 悬浮窗 → C 划词 → D 静默替换 → E 截图 OCR（键盘 <kbd>1</kbd>–<kbd>5</kbd>）</li>
+    <li><strong>状态切换</strong>：每个 Tab 右上「演示控制」可单切状态或 ▶ 重放全流程</li>
+    <li><strong>系统页</strong>：F 隐私锁（<kbd>6</kbd>）· G 移动键盘（<kbd>7</kbd>）· H 主窗首页/用量（<kbd>8</kbd>）· I 模型配置（<kbd>9</kbd>）· J 快捷键（<kbd>0</kbd>）；K/L/M 点 Tab 切换</li>
+    <li><strong>菜单栏</strong>：右上译语图标 → Popover（含最近一条译文 + 复制/注入，ADR-005）</li>
+    <li><strong>主题</strong>：跟随系统浅/深色；Token 对齐 PRD §5.2（主色 #4F7CFF）</li>
+  </ol>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
