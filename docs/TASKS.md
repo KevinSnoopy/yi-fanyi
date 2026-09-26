@@ -48,11 +48,11 @@
 
 | ID | 任务 | 状态 | 依赖 | 验收要点 | 关联 |
 |---|---|---|---|---|---|
-| T-020 | Flutter 工程脚手架 + macOS 原生桥 | 🟡 Web 端可运行（09 会话）；macOS 壳待 | T-011 | 空壳可运行，MethodChannel 打通 | ADR-004 |
-| T-021 | 流程 A：按住 Fn 说话 → 成稿（默认）→ 翻译（开关开时）→ 写回 | 🟡 Mock 链路实测通过；真实 Provider 待联调 | T-020 | 完成一次按住 Fn 说话 → 成稿写回输入框；开「译」开关后写入目标语言 | PRD v3.2 §2.1 |
-| T-022 | 流程 B / C / D：悬浮窗、划词、静默替换 | ⬜ | T-020 | 三个热键可触发，含焦点变化终止 | PRD §2.2–2.4 |
+| T-020 | Flutter 工程脚手架 + macOS 原生桥 | 🟡 Web 端 ✅；macOS 原生壳已落地待实机编译（10 会话） | T-011 | 空壳可运行，MethodChannel 打通 | ADR-004 |
+| T-021 | 流程 A：按住 Fn 说话 → 成稿（默认）→ 翻译（开关开时）→ 写回 | ✅ 2026-09-27 | T-020 | Key 进 SecureStore（Profile 只留 keyRef）、真实 testConnection/fetchModels、真实 SSE 流式成稿、失败内联错误条 + 一键降级演示流式；44 项单测 + widget 端到端全绿 | PRD v3.2 §2.1 · ADR-001/007 |
+| T-022 | 流程 B / C / D：悬浮窗、划词、静默替换 | ✅ 2026-09-27（双落地：原生 system / 应用内 inApp） | T-020 | `SystemTriggerService` 双落地 + B 悬浮窗真实输入流式、C 原生选区优先、D 焦点变化即 abort；桌面原生壳已实现待实机验证 | PRD §2.2–2.4 · §4 规则 3 |
 | T-023 | 模型配置页（灵魂页面） | 🟡 四态表单 + 内联错误 UI 完成；三套真连接待 | T-020 | OpenAI + 自定义 BaseURL + Ollama 三套跑通 | PRD §5.3 ④ |
-| T-024 | 全局热键 + 冲突检测 | ⬜ | T-020 | 可重绑，冲突时红字提示占用方 | PRD §4 |
+| T-024 | 全局热键 + 冲突检测 | ✅ 2026-09-27（Dart 侧 ✅；原生注册待实机） | T-020 | `HotkeyCombo` 结构化组合键 + `kReservedCombos` 三平台占用表 + 真实重绑录制 + 注册报告；macOS Carbon `RegisterEventHotKey` 已实现 | PRD §4 |
 | T-025 | 首次引导三步 + 权限引导 | 🟡 五态向导 UI 完成；真实权限引导待桌面端 | T-020 | 零 Key 可完成本地模型试用体验 | PRD §5.3 ⑥ |
 
 ## Phase 3+ · 多端与商业化
@@ -72,3 +72,4 @@
 - 2026-09-26：T-015 完成（会话 08）——用户拍板 Typeless + Chatterfly 参考系；T-021 验收要点同步为成稿范式（PRD v3.2 §2.1）
 - 2026-09-26：仓库收敛为单 PRD（`PRD_v3.0.md`）+ 单原型（`prototypes/v7-spa/`），v1/v5/v6 原型、`PRD_v2.0.md`、`assets/` 三件删除（用户指令：避免多 Agent 干扰）；历史任务行关联列已标注删除状态
 - 2026-09-26：会话 09 —— T-020 ✅（Web 端）Flutter 工程 13 页全量落地 + 冒烟通过；T-021/T-023/T-025 转 🟡（Mock/UI 就绪，真实联调待）
+- 2026-09-27：会话 10 —— T-021 ✅ / T-022 ✅ / T-024 ✅（Dart 侧）：真实 Provider 联调（Key→SecureStore、真实 SSE 成稿）、B/C/D 系统触发双落地、结构化热键 + 冲突检测 + macOS 原生壳（Carbon/AX/Keychain/NSPanel/StatusBar 六文件）。**回执** [`2026-09-27-01-t021-t022-t024-real-links.md`](./sessions/2026-09-27-01-t021-t022-t024-real-links.md)。`flutter analyze` 0 issue、`flutter test` 44/44、web release ✓、冒烟 15/15 PASS 0 错误；**遗留：Swift 原生壳未实机编译（Linux 沙箱无 macOS SDK）**

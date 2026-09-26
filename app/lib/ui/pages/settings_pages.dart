@@ -1,9 +1,16 @@
-import 'package:flutter/material.dart' hide Badge;
+import 'dart:async';
 
+import 'package:flutter/material.dart' hide Badge;
+import 'package:flutter/services.dart';
+
+import '../../core/icons/lf_icons.dart';
 import '../../core/theme/tokens.dart';
 import '../../models/models.dart';
 import '../../providers/catalog.dart';
+import '../../providers/provider.dart';
 import '../../services/app_store.dart';
+import '../../services/hotkeys.dart';
+import '../../services/service_scope.dart';
 import '../components/cards.dart';
 import '../components/common.dart';
 import '../overlays/recorder_pill.dart' show LfSpinner;
@@ -149,12 +156,18 @@ class ProvidersPage extends StatefulWidget {
 }
 
 class _ProvidersPageState extends State<ProvidersPage> {
-  int view = 1; // 0 空态 / 1 列表 / 2 新增表单 / 3 测试失败
+  int view = 1; // 0 空态 / 1 列表 / 2 新增表单 / 3 测试结果
   int selectedPlat = 0;
   final _baseUrl = TextEditingController();
   final _key = TextEditingController();
   final _model = TextEditingController();
   bool _obscure = true;
+
+  // T-021 真实测试态
+  bool _testing = false;
+  ConnectionTestResult? _lastTest;
+  List<String> _models = const [];
+  String? _modelError;
 
   @override
   void initState() {
@@ -175,30 +188,103 @@ class _ProvidersPageState extends State<ProvidersPage> {
     final d = widget.store.formDefaults(kPlatformCatalog[i].name);
     _baseUrl.text = d.baseUrl;
     _model.text = d.model;
-    _key.text = kPlatformCatalog[i].kind == PlatformKind.ollama ? '' : '';
+    _key.text = '';
+    _lastTest = null;
+    _models = const [];
+    _modelError = null;
   }
 
+  bool get _needsKey =>
+      kPlatformCatalog[selectedPlat].kind != PlatformKind.ollama;
+
+  /// T-021 · 真实「测试连接并保存」：打模型方 /models（或 messages），
+  /// 成功才写入 Key 到 SecureStore；失败展示真实错误码 + 原始返回。
   Future<void> _testAndSave() async {
-    setState(() => view = 3);
-    await Future<void>.delayed(const Duration(milliseconds: 900));
+    final plat = kPlatformCatalog[selectedPlat];
+    final baseUrl = _baseUrl.text.trim();
+    final model = _model.text.trim();
+    final key = _key.text.trim();
+
+    if (baseUrl.isEmpty || model.isEmpty || (_needsKey && key.isEmpty)) {
+      setState(() {
+        view = 3;
+        _lastTest = ConnectionTestResult(
+          success: false,
+          errorCode: 'config',
+          errorMessage: 'BaseURL / 模型${_needsKey ? ' / API Key' : ''} 不能为空',
+        );
+      });
+      return;
+    }
+
+    setState(() {
+      view = 3;
+      _testing = true;
+      _lastTest = null;
+    });
+
+    final result = await widget.store.testConnection(
+      platform: plat.name,
+      baseUrl: baseUrl,
+      model: model,
+      apiKey: key,
+    );
     if (!mounted) return;
-    // 演示表单（预填 Key 无效）→ 401 内联错误；填了 Key ≥8 位则成功
-    final valid = _key.text.trim().length >= 8;
-    if (valid) {
-      final plat = kPlatformCatalog[selectedPlat];
-      widget.store.addProfile(
-        ProviderProfile(
-          id: 'p-${DateTime.now().millisecondsSinceEpoch}',
-          platform: plat.name,
-          baseUrl: _baseUrl.text.trim(),
-          model: _model.text.trim(),
-          latencyMs: 296,
-          healthy: true,
-        ),
+
+    final ok = result.success;
+    if (ok) {
+      await widget.store.addProfileWithKey(
+        platform: plat.name,
+        baseUrl: baseUrl,
+        model: model,
+        apiKey: key,
+        healthy: true,
+        latencyMs: result.latencyMs,
       );
-      setState(() => view = 1);
+    }
+    if (!mounted) return;
+    setState(() {
+      _testing = false;
+      _lastTest = result;
+      if (ok) view = 1;
+    });
+
+    final scope = ServiceScope.maybeOf(context);
+    scope?.toasts.show(ok
+        ? '连接成功 · ${plat.name} · ${result.latencyMs ?? 0}ms'
+        : '连接失败 · ${result.errorCode ?? 'unknown'}');
+  }
+
+  /// T-021 · 真实「拉取模型列表」。
+  Future<void> _fetchModels() async {
+    final plat = kPlatformCatalog[selectedPlat];
+    setState(() {
+      _models = const [];
+      _modelError = null;
+    });
+    try {
+      final list = await widget.store.fetchModels(
+        platform: plat.name,
+        baseUrl: _baseUrl.text.trim(),
+        model: _model.text.trim(),
+        apiKey: _key.text.trim(),
+      );
+      if (!mounted) return;
+      setState(() {
+        _models = list.take(40).toList();
+        if (_models.isEmpty) _modelError = '模型方返回空列表';
+      });
+    } on LfProviderException catch (e) {
+      if (!mounted) return;
+      setState(() => _modelError = '${e.code.name} · ${_clip(e.detail, 160)}');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _modelError = _clip(e.toString(), 160));
     }
   }
+
+  static String _clip(String s, int n) =>
+      s.length <= n ? s : '${s.substring(0, n)}…';
 
   @override
   Widget build(BuildContext context) {
@@ -302,18 +388,57 @@ class _ProvidersPageState extends State<ProvidersPage> {
                 const SizedBox(height: 12),
                 FormFieldRow(
                   label: '模型',
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: TextField(controller: _model, style: const TextStyle(fontSize: LfDimens.fsBase)),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(controller: _model, style: const TextStyle(fontSize: LfDimens.fsBase)),
+                          ),
+                          const SizedBox(width: 8),
+                          LfButton(
+                            label: ' 拉取模型列表',
+                            icon: 'refresh',
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            onPressed: _fetchModels,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      LfButton(
-                        label: ' 拉取模型列表',
-                        icon: 'refresh',
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        onPressed: () {},
-                      ),
+                      if (_modelError != null) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          '拉取失败 · $_modelError',
+                          style: TextStyle(fontSize: LfDimens.fs2xs, color: s.error),
+                        ),
+                      ] else if (_models.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          children: [
+                            for (final m in _models.take(12))
+                              GestureDetector(
+                                onTap: () => setState(() => _model.text = m),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: _model.text == m ? s.brandSoft : s.bgSource,
+                                    borderRadius: BorderRadius.circular(5),
+                                    border: Border.all(color: _model.text == m ? s.brand : s.divider),
+                                  ),
+                                  child: Text(
+                                    m,
+                                    style: TextStyle(
+                                      fontSize: LfDimens.fs2xs,
+                                      color: _model.text == m ? s.brand : s.text2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -326,44 +451,71 @@ class _ProvidersPageState extends State<ProvidersPage> {
                     onPressed: _testAndSave,
                   ),
                 if (effectiveView == 3) ...[
-                  Row(
-                    children: [
-                      const LfSpinner(size: 12),
-                      const SizedBox(width: 8),
-                      Text(
-                        '测试中… ${_baseUrl.text}/models',
-                        style: TextStyle(fontSize: LfDimens.fsXs, color: s.text2),
+                  if (_testing) ...[
+                    Row(
+                      children: [
+                        const LfSpinner(size: 12),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '测试中… ${_baseUrl.text.trim()}',
+                            style: TextStyle(fontSize: LfDimens.fsXs, color: s.text2),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ] else if (_lastTest != null) ...[
+                    if (_lastTest!.success)
+                      // 成功：真实延迟来自模型方响应耗时
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: s.success.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(LfDimens.rCard),
+                          border: Border.all(color: s.success.withValues(alpha: 0.4)),
+                        ),
+                        child: Row(
+                          children: [
+                            LfIcons.icon('check', size: 13, color: s.success),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '连接成功 · ${_lastTest!.latencyMs ?? 0}ms · Key 已存入系统密钥串',
+                                style: TextStyle(fontSize: LfDimens.fsXs, color: s.text),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else ...[
+                      InlineError(
+                        title: '测试失败 · ${_lastTest!.errorCode ?? 'unknown'}',
+                        body: '模型方返回：${_clip(_lastTest!.errorMessage ?? '（无响应体）', 220)}',
+                        actions: [
+                          InlineLink('→ 返回修改 Key', onTap: () => setState(() => view = 2)),
+                          InlineLink('→ 先用本地模型试用', onTap: widget.onGoOnboarding),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      LfButton(
+                        label: '跳过测试，直接保存（标记为未验证）',
+                        full: true,
+                        onPressed: () async {
+                          final plat = kPlatformCatalog[selectedPlat];
+                          await widget.store.addProfileWithKey(
+                            platform: plat.name,
+                            baseUrl: _baseUrl.text.trim(),
+                            model: _model.text.trim(),
+                            apiKey: _key.text.trim(),
+                            healthy: false,
+                          );
+                          if (!mounted) return;
+                          setState(() => view = 1);
+                        },
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 10),
-                  InlineError(
-                    title: '测试失败 · 401 Invalid API Key',
-                    body: '模型方返回：Incorrect API key provided. 请检查 Key 是否复制完整、账号是否欠费。',
-                    actions: [
-                      InlineLink('→ 返回修改 Key', onTap: () => setState(() => view = 2)),
-                      InlineLink('→ 先用本地模型试用', onTap: widget.onGoOnboarding),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  LfButton(
-                    label: '跳过测试，直接保存（演示 Key ≥8 位自动通过）',
-                    full: true,
-                    onPressed: () {
-                      final plat = kPlatformCatalog[selectedPlat];
-                      widget.store.addProfile(
-                        ProviderProfile(
-                          id: 'p-${DateTime.now().millisecondsSinceEpoch}',
-                          platform: plat.name,
-                          baseUrl: _baseUrl.text.trim(),
-                          model: _model.text.trim(),
-                          latencyMs: null,
-                          healthy: false,
-                        ),
-                      );
-                      setState(() => view = 1);
-                    },
-                  ),
+                  ],
                 ],
               ],
             ],
@@ -435,16 +587,89 @@ class HotkeysPage extends StatefulWidget {
 }
 
 class _HotkeysPageState extends State<HotkeysPage> {
-  int view = 1; // 0 已绑定 / 1 冲突态 / 2 录制中
-  String? recordingKey;
+  int view = 0; // 0 已绑定 / 1 冲突检测 / 2 重绑录制中
+  String? recordingId;
+  HotkeyCombo? draftCombo;
+  final FocusNode _recordFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _recordFocus.dispose();
+    super.dispose();
+  }
+
+  HotkeyManager? get _manager => ServiceScope.maybeOf(context)?.hotkeys;
+
+  void _startRecord(String id) {
+    setState(() {
+      recordingId = id;
+      draftCombo = null;
+      view = 2;
+    });
+    _recordFocus.requestFocus();
+  }
+
+  /// T-024 · 真实重绑录制：按下什么就绑什么（Esc 取消）。
+  KeyEventResult _onRecordKey(FocusNode node, KeyEvent event) {
+    if (recordingId == null || event is! KeyDownEvent) return KeyEventResult.ignored;
+
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
+      setState(() {
+        recordingId = null;
+        view = 1;
+      });
+      return KeyEventResult.handled;
+    }
+
+    final pressed = HardwareKeyboard.instance.logicalKeysPressed;
+    final mods = <HotkeyModifier>{};
+    String? keyName;
+    for (final k in pressed) {
+      final m = hotkeyModifierOf(k);
+      if (m != null) {
+        mods.add(m);
+      } else {
+        keyName ??= hotkeyKeyNameOf(k);
+      }
+    }
+    if (keyName == null) return KeyEventResult.handled; // 只按了修饰键，继续等主键
+
+    final combo = HotkeyCombo(modifiers: mods, key: keyName);
+    setState(() => draftCombo = combo);
+    unawaited(_applyRebind(recordingId!, combo));
+    return KeyEventResult.handled;
+  }
+
+  Future<void> _applyRebind(String id, HotkeyCombo combo) async {
+    final manager = _manager;
+    if (manager == null) return;
+    final conflict = await manager.rebind(id, combo);
+    if (!mounted) return;
+    final label = manager.items.firstWhere((h) => h.id == id, orElse: () => manager.items.first).label;
+    setState(() {
+      recordingId = null;
+      view = 1;
+    });
+    ServiceScope.maybeOf(context)?.toasts.show(
+          conflict == null
+              ? '「$label」已重绑为 ${combo.format(manager.platform)}'
+              : '「$label」已保存，但冲突：${conflict.owner}',
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
     final s = LfScheme.of(context);
+    final scope = ServiceScope.maybeOf(context);
+    final manager = scope?.hotkeys;
     return ListenableBuilder(
       listenable: widget.store,
       builder: (context, _) {
         final items = widget.store.hotkeys;
+        final conflicts = manager?.detectConflicts() ?? const {};
+        final recordingLabel = recordingId == null
+            ? ''
+            : items.firstWhere((h) => h.id == recordingId, orElse: () => items.first).label;
         return SingleChildScrollView(
           padding: const EdgeInsets.all(22),
           child: Column(
@@ -464,56 +689,101 @@ class _HotkeysPageState extends State<HotkeysPage> {
                     ),
                     const SizedBox(width: 6),
                   ],
+                  const Spacer(),
+                  if (manager != null) ...[
+                    LfButton(
+                      label: manager.paused ? '已禁用' : '临时禁用',
+                      icon: manager.paused ? 'x' : 'pause',
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      onPressed: () async => manager.setPaused(!manager.paused),
+                    ),
+                    const SizedBox(width: 6),
+                    LfButton(
+                      label: '恢复默认',
+                      icon: 'rotate',
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      onPressed: () async => manager.resetToDefaults(AppStore.kDefaultHotkeys),
+                    ),
+                  ],
                 ],
               ),
               const SizedBox(height: 12),
-              if (view == 2) ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: s.brandSoft,
-                    borderRadius: BorderRadius.circular(LfDimens.rCard),
-                    border: Border.all(color: s.brand.withValues(alpha: 0.4)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: s.brand,
-                          borderRadius: BorderRadius.circular(6),
+              if (view == 2 && recordingId != null) ...[
+                Focus(
+                  autofocus: true,
+                  focusNode: _recordFocus,
+                  onKeyEvent: _onRecordKey,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: s.brandSoft,
+                      borderRadius: BorderRadius.circular(LfDimens.rCard),
+                      border: Border.all(color: s.brand.withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: s.brand,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            draftCombo == null ? '…' : draftCombo!.format(manager?.platform ?? HotkeyPlatform.macOS),
+                            style: const TextStyle(fontSize: LfDimens.fsSm, fontWeight: FontWeight.w700, color: Colors.white),
+                          ),
                         ),
-                        child: const Text(
-                          '…',
-                          style: TextStyle(fontSize: LfDimens.fsSm, fontWeight: FontWeight.w700, color: Colors.white),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            '正在录制「$recordingLabel」的新组合键——请按下组合（如 ⌥ J）',
+                            style: TextStyle(fontSize: LfDimens.fsSm, color: s.text),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          '正在录制「截图 OCR」的新组合键——请按下组合（如 ⌥ J）',
-                          style: TextStyle(fontSize: LfDimens.fsSm, color: s.text),
+                        Text(
+                          'Esc 取消',
+                          style: TextStyle(
+                            fontSize: LfDimens.fsXs,
+                            color: s.text2,
+                            decoration: TextDecoration.underline,
+                          ),
                         ),
-                      ),
-                      Text(
-                        'Esc 取消',
-                        style: TextStyle(
-                          fontSize: LfDimens.fsXs,
-                          color: s.text2,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
               ],
               if (view == 1) ...[
-                const InlineError(
-                  title: '检测到 1 处热键冲突',
-                  iconName: 'warn',
-                  body: '「截图 OCR」与 macOS 系统截屏冲突；Windows 下 Ctrl+Alt+A 与微信截图冲突。冲突热键不会全局生效，请在下方重绑。',
-                ),
+                if (conflicts.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: s.success.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(LfDimens.rCard),
+                      border: Border.all(color: s.success.withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        LfIcons.icon('check', size: 13, color: s.success),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '未检测到冲突 · ${manager?.lastReport?.summary ?? ''}',
+                            style: TextStyle(fontSize: LfDimens.fsXs, color: s.text),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  InlineError(
+                    title: '检测到 ${conflicts.length} 处热键冲突',
+                    iconName: 'warn',
+                    body: conflicts.values
+                        .map((c) => '· ${items.firstWhere((h) => h.id == c.hotkeyId, orElse: () => items.first).label}：${c.owner}（${c.reason}）')
+                        .join('\n'),
+                  ),
                 const SizedBox(height: 12),
               ],
               Container(
@@ -527,15 +797,16 @@ class _HotkeysPageState extends State<HotkeysPage> {
                   children: [
                     for (final k in items)
                       HotkeyRow(
-                        item: view == 1 ? k : HotkeyItem(id: k.id, label: k.label, mac: k.mac, win: k.win),
-                        onRebind: () => setState(() => view = 2),
+                        item: k,
+                        onRebind: () => _startRecord(k.id),
                       ),
                   ],
                 ),
               ),
               const SizedBox(height: 12),
               Text(
-                '提示：macOS 全局热键需授予「辅助功能 + 输入监控」权限，首次启动走授权引导（见「首次引导」页）。热键监听崩溃自愈，更新不丢配置（PRD §8）。',
+                '提示：macOS 全局热键需授予「辅助功能 + 输入监控」权限，首次启动走授权引导（见「首次引导」页）。热键监听崩溃自愈，更新不丢配置（PRD §8）。\n'
+                '当前生效范围：${manager?.lastReport?.native == true ? '原生全局（含其他应用）' : '应用内（浏览器/预览环境无法抢占全局按键）'}。',
                 style: TextStyle(fontSize: LfDimens.fsXs, color: s.text3, height: 1.7),
               ),
             ],

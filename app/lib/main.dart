@@ -1,23 +1,49 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/theme/tokens.dart';
 import 'services/app_store.dart';
+import 'services/native_bridge.dart';
 import 'services/secure_store.dart';
+import 'services/service_scope.dart';
 import 'ui/shell/app_shell.dart';
 
 /// 译语 LinguaFlow —— BYOK 语音成稿 · 五端一致
 /// 入口：AppStore 装配 + 亮暗双主题 + AppShell（15 Tab 演示导航）。
+///
+/// T-021：Key 走 SecureStore（桌面 Keychain / Web 混淆降级）；配置与历史落
+/// SharedPreferences。T-022/T-024：装配热键 + 触发服务（Web 自动降级）。
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final store = AppStore(secure: InMemorySecureStore());
+
+  final prefs = SharedPreferencesAsync();
+  final secure = DelegatingSecureStore(
+    primary: kIsWeb ? null : ChannelSecureStore(),
+    fallback: PrefsSecureStore(prefs),
+  );
+
+  final store = AppStore(secure: secure, prefs: prefs);
   await store.load();
-  runApp(LinguaFlowApp(store: store));
+
+  final services = LfServices.bootstrap(
+    store: store,
+    bridge: kIsWeb
+        ? NoopNativeBridge()
+        : FallbackNativeBridge(ChannelNativeBridge()),
+  );
+  await services.init();
+
+  runApp(LinguaFlowApp(store: store, services: services));
 }
 
 class LinguaFlowApp extends StatefulWidget {
-  const LinguaFlowApp({super.key, required this.store});
+  const LinguaFlowApp({super.key, required this.store, required this.services});
 
   final AppStore store;
+  final LfServices services;
 
   @override
   State<LinguaFlowApp> createState() => _LinguaFlowAppState();
@@ -32,6 +58,12 @@ class _LinguaFlowAppState extends State<LinguaFlowApp> {
     final m = RegExp(r'tab=([A-O])').firstMatch(Uri.base.fragment);
     if (m == null) return 0;
     return 'ABCDEFGHIJKLMNO'.indexOf(m.group(1)!).clamp(0, 14);
+  }
+
+  @override
+  void dispose() {
+    widget.services.dispose();
+    super.dispose();
   }
 
   @override
@@ -66,6 +98,7 @@ class _LinguaFlowAppState extends State<LinguaFlowApp> {
         backgroundColor: scheme.bgSource,
         body: AppShell(
           store: widget.store,
+          services: widget.services,
           tab: _tab,
           onTab: (t) => setState(() => _tab = t),
           dark: _dark,

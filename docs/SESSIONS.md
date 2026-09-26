@@ -7,6 +7,7 @@
 
 | 日期 | 会话 | 任务 | 摘要 | 结果 |
 |---|---|---|---|---|
+| 2026-09-27 | [`2026-09-27-01-t021-t022-t024-real-links`](./sessions/2026-09-27-01-t021-t022-t024-real-links.md) | T-021 + T-022 + T-024 | 真实链路替换 Mock：Key→SecureStore/Keychain（Profile 只留 keyRef）+ 真实 SSE 成稿 + 失败内联错误条 + 一键降级演示流式；B/C/D 系统触发双落地（悬浮窗/划词/静默替换 + 焦点变化终止）；结构化热键 `HotkeyCombo` + 三平台 `kReservedCombos` 冲突表 + 真实重绑录制 + 注册报告；macOS 原生壳六文件（Carbon 热键 / AX 注入 / Keychain / NSPanel 浮层 / StatusBar Popover / 两插件 + pbxproj 挂接）。`flutter test` 44/44、analyze 0 issue、冒烟 15/15 PASS 0 错误 | ✅ 完成（Swift 未实机编译） |
 | 2026-09-26 | [`2026-09-26-08-t015-typeless-chatterfly`](./sessions/2026-09-26-08-t015-typeless-chatterfly.md) | T-015 | 用户拍板参考系 Typeless + Chatterfly（成稿为主、翻译是开关）：PRD v3.2 定位对齐（§1/§2 流程 A/§3/§5/§6 + 部署版 8 处同步）+ Chatterfly/Typeless 竞品情报全量重写 + v7 原型 `prototypes/v7-spa/`（Tab A 成稿范式 + pill 160×36 + 「译」开关默认关 + Tab K 六场景；补 ADR-008 取消按钮与 K→A 残留两处修复；无头冒烟 0 错误）+ 协议文档全量对齐 | ✅ 完成 |
 | 2026-09-26 | [`2026-09-26-07-prd-tidy-v6-prototype`](./sessions/2026-09-26-07-prd-tidy-v6-prototype.md) | T-017 | v6 13 页全量原型落地 `prototypes/v6-spa/`（Tab A–M + Popover + 走查面板；修 v5 遗留 runA/孤儿 timer bug；无头冒烟通过）+ PRD v3.1 整理修订（计数 22 实测/断链/页面表）+ prototypes/README 重写 + 协议文档对齐 | ✅ 完成 |
 | 2026-09-26 | [`2026-09-26-06-prd-v3-push`](./sessions/2026-09-26-06-prd-v3-push.md) | T-016 | PRD v3.0 拆分上线（仅 §1-9 需求；§10/§11/§12 下沉到 ADR-002 + roadmap + ADR-005~008）+ v5 SPA 原型 push 到 `prototypes/v5-spa/` + PRD 部署版 HTML 到 `assets/` + CONTEXT/TASKS/roadmap 同步 | ✅ 完成 |

@@ -14,18 +14,63 @@ import '../providers/ollama.dart';
 import '../providers/openai_compatible.dart';
 import 'secure_store.dart';
 
+/// 当前成稿链路的 Provider 来源（T-021：UI 必须明示真模型/演示流）。
+enum ProviderSource {
+  /// 真实 Provider：Key 已入库 + 连接测试通过，请求直连模型方 BaseURL。
+  real,
+
+  /// 演示流式：未配置 Key（或连接不可用）时的兜底，绝不白屏（PRD §7）。
+  mock,
+}
+
 /// 全局应用状态 —— 全部页面共享的数据源（ChangeNotifier）。
 ///
 /// 持久化（PRD §9）：MVP 走 SharedPreferences（JSON 序列化）；接口保持
 /// [AppStore.persistencePrefix] 抽象，桌面端换 SQLite 时只动 [load]/[save]。
-/// Key 明文永不入此 store —— [SecureStore] 引用 id 而已（ADR-001）。
+  /// Key 明文永不入此 store —— [SecureStore] 引用 id 而已（ADR-001）。
 class AppStore extends ChangeNotifier {
+  /// 持久化防抖（避免流式/动画高频 notify 打爆存储写）。
+  Timer? _saveTimer;
+
+  @override
+  void notifyListeners() {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 400), () => unawaited(save()));
+    super.notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _saveTimer?.cancel();
+    for (final p in _providerCache.values) {
+      p.dispose();
+    }
+    _providerCache.clear();
+    super.dispose();
+  }
+
   AppStore({required this.secure, this.prefs}) {
     _seedDemoData();
   }
 
   final SecureStore secure;
-  final SharedPreferencesAsync? prefs;
+  SharedPreferencesAsync? prefs;
+
+  /// 运行期 Provider 实例缓存（避免每次成稿都新建 http.Client 泄漏连接）。
+  final Map<String, TranslationProvider> _providerCache = {};
+
+  /// 最近一次成稿链路使用的来源（A 页状态条展示）。
+  ProviderSource lastProviderSource = ProviderSource.mock;
+
+  /// 内置演示 Provider（无真实 Key 时的兜底，PRD §7 绝不白屏）。
+  MockProvider get demoProvider => MockProvider(
+        draftText: kDemoDraftZh,
+        translateText: kDemoDraftEn,
+      );
+
+  static const String kDemoDraftZh = '那个报价我确认没问题，下周三之前可以把合同签了。';
+  static const String kDemoDraftEn =
+      'Confirmed, no problem with the quote. We can sign the contract before next Wednesday.';
 
   static const String persistencePrefix = 'lf.';
 
@@ -95,11 +140,20 @@ class AppStore extends ChangeNotifier {
   }
 
   void removeProfile(String id) {
+    _providerCache.remove(id)?.dispose();
     _profiles.removeWhere((p) => p.id == id);
     if (defaultProfile == null && _profiles.isNotEmpty) {
       _profiles[0] = _profiles[0].copyWith(isDefault: true);
     }
     notifyListeners();
+  }
+
+  /// 删除 Profile 并清理其 Key（T-021：Key 生命周期跟着 Profile 走）。
+  Future<void> removeProfileWithKey(String id) async {
+    final p = _profiles.firstWhere((e) => e.id == id,
+        orElse: () => ProviderProfile(id: id, platform: '', baseUrl: '', model: ''));
+    if (p.keyRef != null) await secure.delete(p.keyRef!);
+    removeProfile(id);
   }
 
   void setDefault(String id) {
@@ -141,6 +195,174 @@ class AppStore extends ChangeNotifier {
     }
   }
 
+  // ============================================================
+  // T-021 · 真实 Provider 联调
+  // ============================================================
+
+  /// 平台是否需要 Key（Ollama 本地等无 Key 平台除外）。
+  bool platformNeedsKey(String platform) {
+    final item = kPlatformCatalogLookup(platform);
+    return item?.kind != PlatformKind.ollama;
+  }
+
+  /// 该 Profile 的 Key 是否已入库（T-021：I 页列表展示「Key 已保存 / 未保存」）。
+  Future<bool> profileHasKey(ProviderProfile p) async {
+    if (!platformNeedsKey(p.platform)) return true; // 本地模型无需 Key
+    if (p.keyRef == null) return false;
+    final k = await secure.read(p.keyRef!);
+    return k != null && k.isNotEmpty;
+  }
+
+  /// 建 Provider 实例（带缓存；Profile 被改/删时清缓存）。
+  Future<TranslationProvider> _buildCached(ProviderProfile p) {
+    final cached = _providerCache[p.id];
+    if (cached != null) return Future<TranslationProvider>.value(cached);
+    return buildProvider(p).then((v) {
+      _providerCache[p.id] = v;
+      return v;
+    });
+  }
+
+  /// 配置变更后丢弃缓存（下次调用重新按新 Key/新 BaseURL 建实例）。
+  void invalidateProvider(String profileId) {
+    _providerCache.remove(profileId)?.dispose();
+  }
+
+  /// 解析当前生效 Provider：真实可用则返回真实实例，否则降级演示流式。
+  ///
+  /// 判定链（PRD §7 绝不白屏）：
+  /// 1. 无默认 Profile → Mock
+  /// 2. 平台需要 Key 但 Key 未入库 → Mock
+  /// 3. 最近一次连接测试失败且从未成功 → Mock
+  /// 4. 其余 → 真实 Provider（缓存实例）
+  Future<TranslationProvider> resolveProvider({ProviderProfile? profile}) async {
+    final p = profile ?? defaultProfile;
+    if (p == null || p.platform.isEmpty || p.platform.contains('演示')) {
+      lastProviderSource = ProviderSource.mock;
+      return demoProvider;
+    }
+    if (!await profileHasKey(p)) {
+      lastProviderSource = ProviderSource.mock;
+      return demoProvider;
+    }
+    if (p.healthy == false && p.latencyMs == null) {
+      lastProviderSource = ProviderSource.mock;
+      return demoProvider;
+    }
+    lastProviderSource = ProviderSource.real;
+    return _buildCached(p);
+  }
+
+  /// 「测试连接」真实实现（I 页：填完 Key → 打模型方 → 展示真实延迟/错误码）。
+  ///
+  /// 不落库、不写 Key —— 纯探测；调用方拿到结果后再决定是否 [addProfileWithKey]。
+  Future<ConnectionTestResult> testConnection({
+    required String platform,
+    required String baseUrl,
+    required String model,
+    String? apiKey,
+  }) async {
+    TranslationProvider p;
+    try {
+      p = _construct(platform: platform, baseUrl: baseUrl, model: model, apiKey: apiKey ?? '');
+    } catch (e) {
+      return ConnectionTestResult(
+        success: false,
+        errorCode: 'config',
+        errorMessage: '配置无法构造 Provider：$e',
+      );
+    }
+    try {
+      return await p.testConnection();
+    } finally {
+      p.dispose();
+    }
+  }
+
+  /// 「拉取模型列表」真实实现（I 页模型下拉自动填充）。
+  Future<List<String>> fetchModels({
+    required String platform,
+    required String baseUrl,
+    required String model,
+    String? apiKey,
+  }) async {
+    final p = _construct(platform: platform, baseUrl: baseUrl, model: model, apiKey: apiKey ?? '');
+    try {
+      return await p.listModels();
+    } finally {
+      p.dispose();
+    }
+  }
+
+  /// 保存 Provider：Key 先入 SecureStore，Profile 只留引用 id（ADR-001）。
+  Future<ProviderProfile> addProfileWithKey({
+    required String platform,
+    required String baseUrl,
+    required String model,
+    String? apiKey,
+    required bool healthy,
+    int? latencyMs,
+    bool isDefault = false,
+  }) async {
+    final id = 'p-${DateTime.now().millisecondsSinceEpoch}';
+    String? keyRef;
+    if (apiKey != null && apiKey.isNotEmpty) {
+      keyRef = keyRefFor(id);
+      await secure.write(keyRef, apiKey);
+    }
+    final profile = ProviderProfile(
+      id: id,
+      platform: platform,
+      baseUrl: baseUrl,
+      model: model,
+      keyRef: keyRef,
+      isDefault: isDefault || _profiles.isEmpty,
+      latencyMs: latencyMs,
+      healthy: healthy,
+    );
+    addProfile(profile);
+    return profile;
+  }
+
+  /// 更新已保存 Provider 的 Key（重新测试连接场景）。
+  Future<void> updateProfileKey(String id, String apiKey) async {
+    final i = _profiles.indexWhere((p) => p.id == id);
+    if (i < 0) return;
+    final keyRef = _profiles[i].keyRef ?? keyRefFor(id);
+    if (apiKey.isEmpty) {
+      await secure.delete(keyRef);
+    } else {
+      await secure.write(keyRef, apiKey);
+    }
+    _profiles[i] = _profiles[i].copyWith(keyRef: keyRef);
+    invalidateProvider(id);
+    notifyListeners();
+  }
+
+  /// 按平台构造 Provider 实例（不缓存，测试/拉取模型用后即弃）。
+  TranslationProvider _construct({
+    required String platform,
+    required String baseUrl,
+    required String model,
+    required String apiKey,
+  }) {
+    switch (platform) {
+      case 'Anthropic' || 'Claude':
+        return AnthropicProvider(apiKey: apiKey, model: model, baseUrl: baseUrl);
+      case 'Gemini':
+        return GeminiProvider(apiKey: apiKey, model: model, baseUrl: baseUrl);
+      case 'Ollama' || 'Ollama（本地）' || 'Ollama 本地':
+        return OllamaProvider(model: model, baseUrl: baseUrl);
+      default:
+        return OpenAICompatibleProvider.forPlatform(
+          platform,
+          apiKey: apiKey,
+          model: model,
+          baseUrl: baseUrl,
+        );
+    }
+  }
+
   /// 新增 Provider 表单的默认值（原型 form-grid 预填）。
   ({String baseUrl, String model, String keyHint}) formDefaults(String platform) {
     final item = kPlatformCatalog.firstWhere((c) => c.name == platform);
@@ -162,6 +384,23 @@ class AppStore extends ChangeNotifier {
           },
       keyHint: item.keyHint ?? 'sk-…',
     );
+  }
+
+  // ============================================================
+  // 热键（J）—— T-024：重绑后写回 store 并持久化
+  // ============================================================
+  void setHotkey(HotkeyItem item) {
+    final i = _hotkeys.indexWhere((h) => h.id == item.id);
+    if (i < 0) return;
+    _hotkeys[i] = item;
+    notifyListeners();
+  }
+
+  void resetHotkeys(List<HotkeyItem> defaults) {
+    _hotkeys
+      ..clear()
+      ..addAll(defaults);
+    notifyListeners();
   }
 
   // ============================================================
@@ -258,6 +497,19 @@ class AppStore extends ChangeNotifier {
     await sp.setString('${persistencePrefix}terms',
         jsonEncode(_termGroups.map((g) => {'name': g.name, 'entries': g.entries.map((e) => e.toJson()).toList()}).toList()));
     await sp.setString('${persistencePrefix}history', jsonEncode(_history.map((h) => h.toJson()).toList()));
+    await sp.setString('${persistencePrefix}hotkeys', jsonEncode(_hotkeys.map((h) => h.toJson()).toList()));
+    await sp.setString(
+        '${persistencePrefix}prefs',
+        jsonEncode({
+          'sourceLang': sourceLang,
+          'targetLang': targetLang,
+          'translateStyle': translateStyle,
+          'bilingualWriteBack': bilingualWriteBack,
+          'previewMode': previewMode,
+          'launchAtLogin': launchAtLogin,
+          'privacyLock': privacyLock,
+          'chosenPlatform': chosenPlatform,
+        }));
     await sp.setBool('${persistencePrefix}onboarded', onboarded);
   }
 
@@ -293,6 +545,26 @@ class AppStore extends ChangeNotifier {
         ..addAll((jsonDecode(historyJson) as List<Object?>).map(
           (e) => HistoryRecord.fromJson(e! as Map<String, Object?>),
         ));
+    }
+    final hotkeysJson = await sp.getString('${persistencePrefix}hotkeys');
+    if (hotkeysJson != null) {
+      _hotkeys
+        ..clear()
+        ..addAll((jsonDecode(hotkeysJson) as List<Object?>).map(
+          (e) => HotkeyItem.fromJson(e! as Map<String, Object?>),
+        ));
+    }
+    final prefsJson = await sp.getString('${persistencePrefix}prefs');
+    if (prefsJson != null) {
+      final m = jsonDecode(prefsJson) as Map<String, Object?>;
+      sourceLang = (m['sourceLang'] as String?) ?? sourceLang;
+      targetLang = (m['targetLang'] as String?) ?? targetLang;
+      translateStyle = (m['translateStyle'] as String?) ?? translateStyle;
+      bilingualWriteBack = (m['bilingualWriteBack'] as bool?) ?? bilingualWriteBack;
+      previewMode = (m['previewMode'] as String?) ?? previewMode;
+      launchAtLogin = (m['launchAtLogin'] as bool?) ?? launchAtLogin;
+      privacyLock = (m['privacyLock'] as bool?) ?? privacyLock;
+      chosenPlatform = (m['chosenPlatform'] as String?) ?? chosenPlatform;
     }
     onboarded = await sp.getBool('${persistencePrefix}onboarded') ?? false;
     notifyListeners();
@@ -396,15 +668,76 @@ class AppStore extends ChangeNotifier {
       const Skill(id: 's-coding', name: 'Vibe-Coding 提示词', desc: '把口述需求转成结构化 Prompt，含约束条件与输出格式。', icon: 'code', meta: '内置 · 适配流程 A'),
     ]);
 
-    _hotkeys.addAll([
-      const HotkeyItem(id: 'hk-a', label: '按住说话（流程 A）', mac: '按住 Fn', win: '按住 Fn'),
-      const HotkeyItem(id: 'hk-b', label: '唤起悬浮窗（流程 B）', mac: '⌥ Space', win: 'Alt Space'),
-      const HotkeyItem(id: 'hk-c', label: '划词翻译（流程 C）', mac: '⌥ D', win: 'Ctrl Alt D'),
-      const HotkeyItem(id: 'hk-d', label: '静默替换（流程 D）', mac: '⌥ ↩', win: 'Ctrl Alt ↩'),
-      const HotkeyItem(id: 'hk-e', label: '截图 OCR（流程 E）', mac: '⌥ S', win: 'Ctrl Alt S', conflictWith: 'macOS 截屏 ⌥⇧S'),
-      const HotkeyItem(id: 'hk-main', label: '打开主窗口', mac: '双击 ⌥', win: '双击 Ctrl'),
-      const HotkeyItem(id: 'hk-pause', label: '临时禁用全部热键', mac: '⌥ ⇧ P', win: 'Ctrl Alt P'),
-      const HotkeyItem(id: 'hk-lock', label: '隐私锁', mac: '⌥ ⇧ K', win: 'Ctrl Alt K'),
-    ]);
+    _hotkeys.addAll(kDefaultHotkeys);
   }
+
+  /// 出厂热键（PRD §4 表格口径；J 页「恢复默认」的基准）。
+  static const List<HotkeyItem> kDefaultHotkeys = [
+    HotkeyItem(
+      id: 'hk-a',
+      label: '按住说话（流程 A）',
+      mac: '按住 Fn',
+      win: '按住 Fn',
+      holdToRecord: true,
+      macCombo: HotkeyCombo(modifiers: {}, key: 'fn', hold: true),
+      winCombo: HotkeyCombo(modifiers: {}, key: 'fn', hold: true),
+    ),
+    HotkeyItem(
+      id: 'hk-b',
+      label: '唤起悬浮窗（流程 B）',
+      mac: '⌥ Space',
+      win: 'Alt Space',
+      macCombo: HotkeyCombo(modifiers: {HotkeyModifier.alt}, key: 'space'),
+      winCombo: HotkeyCombo(modifiers: {HotkeyModifier.alt}, key: 'space'),
+    ),
+    HotkeyItem(
+      id: 'hk-c',
+      label: '划词翻译（流程 C）',
+      mac: '⌥ D',
+      win: 'Ctrl Alt D',
+      macCombo: HotkeyCombo(modifiers: {HotkeyModifier.alt}, key: 'd'),
+      winCombo: HotkeyCombo(modifiers: {HotkeyModifier.ctrl, HotkeyModifier.alt}, key: 'd'),
+    ),
+    HotkeyItem(
+      id: 'hk-d',
+      label: '静默替换（流程 D）',
+      mac: '⌥ ↩',
+      win: 'Ctrl Alt ↩',
+      macCombo: HotkeyCombo(modifiers: {HotkeyModifier.alt}, key: 'enter'),
+      winCombo: HotkeyCombo(modifiers: {HotkeyModifier.ctrl, HotkeyModifier.alt}, key: 'enter'),
+    ),
+    HotkeyItem(
+      id: 'hk-e',
+      label: '截图 OCR（流程 E）',
+      mac: '⌥ S',
+      win: 'Ctrl Alt S',
+      conflictWith: 'macOS 截屏 ⌥⇧S',
+      macCombo: HotkeyCombo(modifiers: {HotkeyModifier.alt}, key: 's'),
+      winCombo: HotkeyCombo(modifiers: {HotkeyModifier.ctrl, HotkeyModifier.alt}, key: 's'),
+    ),
+    HotkeyItem(
+      id: 'hk-main',
+      label: '打开主窗口',
+      mac: '双击 ⌥',
+      win: '双击 Ctrl',
+      macCombo: HotkeyCombo(modifiers: {HotkeyModifier.alt}, doubleTap: true),
+      winCombo: HotkeyCombo(modifiers: {HotkeyModifier.ctrl}, doubleTap: true),
+    ),
+    HotkeyItem(
+      id: 'hk-pause',
+      label: '临时禁用全部热键',
+      mac: '⌥ ⇧ P',
+      win: 'Ctrl Alt P',
+      macCombo: HotkeyCombo(modifiers: {HotkeyModifier.alt, HotkeyModifier.shift}, key: 'p'),
+      winCombo: HotkeyCombo(modifiers: {HotkeyModifier.ctrl, HotkeyModifier.alt}, key: 'p'),
+    ),
+    HotkeyItem(
+      id: 'hk-lock',
+      label: '隐私锁',
+      mac: '⌥ ⇧ K',
+      win: 'Ctrl Alt K',
+      macCombo: HotkeyCombo(modifiers: {HotkeyModifier.alt, HotkeyModifier.shift}, key: 'k'),
+      winCombo: HotkeyCombo(modifiers: {HotkeyModifier.ctrl, HotkeyModifier.alt}, key: 'k'),
+    ),
+  ];
 }

@@ -262,7 +262,7 @@ class _PrefsPageState extends State<PrefsPage> {
                   ),
                 SizedBox(
                   width: box.maxWidth,
-                  height: 64,
+                  height: 78,
                   child: SkillCard(
                     skill: const Skill(id: 'new', name: '新建 Skill', desc: '', icon: 'plus', meta: '选择风格 / 术语表 / 输出格式', custom: true),
                     custom: true,

@@ -53,6 +53,14 @@ const List<PlatformCatalogItem> kPlatformCatalog = [
       kind: PlatformKind.custom, keyHint: 'sk-…'),
 ];
 
+/// 按平台名查目录项（模糊匹配：'Ollama（本地）' → Ollama）。
+PlatformCatalogItem? kPlatformCatalogLookup(String name) {
+  for (final i in kPlatformCatalog) {
+    if (name.contains(i.name) || i.name.contains(name)) return i;
+  }
+  return null;
+}
+
 /// 首次引导平台卡（原型 WIZ_PLATS，6 项）。
 const List<PlatformCatalogItem> kOnboardingCatalog = [
   PlatformCatalogItem(name: 'OpenAI', logo: 'O', color: 0xFF10A37F, tag: '', kind: PlatformKind.openAICompatible),

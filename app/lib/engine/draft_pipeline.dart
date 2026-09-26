@@ -19,7 +19,10 @@ class DraftPipeline {
 
   final RecorderStateMachine sm;
   final SttService stt;
-  final TranslationProvider provider;
+
+  /// 当前 Provider —— 可热替换（T-021：每次录音前按 AppStore 重新解析，
+  /// 切换模型/改 Key 后下一次录音立即生效，无需重启）。
+  TranslationProvider provider;
 
   CancelToken? _cancel;
 
@@ -33,6 +36,7 @@ class DraftPipeline {
     String? glossaryJson,
     String? tone,
     bool bilingual = false,
+    void Function(LfProviderException error)? onError,
   }) async {
     _cancel?.cancel();
     final cancel = CancelToken();
@@ -80,8 +84,11 @@ class DraftPipeline {
       // ④ 预览（1.2s 后悔窗口；超时自动写入）
       cancel.throwIfCancelled();
       sm.showPreview(finalText, onTimeout: () => onFinal(finalText));
-    } on LfProviderException {
-      if (!cancel.isCancelled) rethrow;
+    } on LfProviderException catch (e) {
+      if (!cancel.isCancelled) {
+        sm.fail(e);
+        onError?.call(e);
+      }
     } finally {
       _cancel = null;
     }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/icons/lf_icons.dart';
 import '../../core/theme/tokens.dart';
 import '../../engine/draft_pipeline.dart';
 import '../../engine/recorder_state_machine.dart';
@@ -10,6 +11,8 @@ import '../../models/models.dart';
 import '../../providers/mock_provider.dart';
 import '../../providers/provider.dart';
 import '../../services/app_store.dart';
+import '../../services/hotkeys.dart';
+import '../../services/service_scope.dart';
 import '../components/common.dart';
 import '../overlays/recorder_pill.dart';
 
@@ -34,43 +37,96 @@ class _FlowPageState extends State<FlowPage> {
   final TextEditingController _input = TextEditingController();
   final FocusNode _inputFocus = FocusNode();
 
-  static const String _draftZh = '那个报价我确认没问题，下周三之前可以把合同签了。';
-  static const String _draftEn =
-      'Confirmed, no problem with the quote. We can sign the contract before next Wednesday.';
+  /// T-021：当前链路来源（真实模型 / 演示流式），UI 明示，不做隐瞒。
+  ProviderSource _source = ProviderSource.mock;
+
+  /// 当前生效模型标签（状态条展示）。
+  String _modelLabel = '演示流式 · MockProvider';
+
+  StreamSubscription<HotkeyEvent>? _hotkeySub;
+
+  /// T-021 · 真实模型报错后，用户主动切「演示流式」兜底（PRD §7 绝不白屏）。
+  /// 每次重新录音时重置，回到「真实优先」的判定链。
+  bool _forceDemo = false;
 
   @override
   void initState() {
     super.initState();
     sm = RecorderStateMachine();
-    pipeline = DraftPipeline(sm: sm, stt: MockStt(), provider: _providerFor());
+    pipeline = DraftPipeline(sm: sm, stt: MockStt(), provider: widget.store.demoProvider);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // T-024：订阅流程 A 语音键（按住触发：down 开始 / up 结束）。
+    _hotkeySub ??= ServiceScope.maybeOf(context)?.services.hotkeyEvents.listen((e) {
+      if (e.id != 'hk-a') return;
+      if (e.down) {
+        _startHold();
+      } else {
+        unawaited(_endHold());
+      }
+    });
   }
 
   @override
   void dispose() {
+    _hotkeySub?.cancel();
     sm.dispose();
     _input.dispose();
     _inputFocus.dispose();
     super.dispose();
   }
 
-  /// 依 AppStore 当前默认 Profile 建 Provider（未配置走 Mock 兜底）。
-  TranslationProvider _providerFor() {
-    final p = widget.store.defaultProfile;
-    if (p == null || p.platform == '演示') return MockProvider(draftText: _draftZh, translateText: _draftEn);
-    // 预览环境：真实 Provider 由桌面端使用；Web 演示统一走 Mock 流式
-    return MockProvider(draftText: _draftZh, translateText: _draftEn);
+  /// T-021 · 每次松手前重新解析 Provider：
+  /// 有 Key 且已验证 → 真实模型流式；否则 → 演示流式兜底（PRD §7 绝不白屏）。
+  Future<void> _refreshProvider() async {
+    if (_forceDemo) {
+      pipeline.provider = widget.store.demoProvider;
+      _source = ProviderSource.mock;
+      _modelLabel = '演示流式 · MockProvider（真实模型不可用，已手动降级）';
+      if (mounted) setState(() {});
+      return;
+    }
+    final p = await widget.store.resolveProvider();
+    final profile = widget.store.defaultProfile;
+    pipeline.provider = p;
+    _source = widget.store.lastProviderSource;
+    _modelLabel = _source == ProviderSource.real
+        ? '${profile?.platform ?? ''} · ${profile?.model ?? ''}'
+        : '演示流式 · MockProvider（未配置可用模型）';
+    if (mounted) setState(() {});
   }
 
   Future<void> _startHold() async {
+    _forceDemo = false; // 每次录音重新走真实优先判定链
     sm.startRecording();
+  }
+
+  /// 真实模型报错后手动降级演示流式并重跑一次（PRD §7）。
+  Future<void> _fallbackDemo() async {
+    _forceDemo = true;
+    sm.clearError();
+    await _runPipeline();
   }
 
   Future<void> _endHold() async {
     if (sm.phase != RecorderPhase.recording) return;
+    await _runPipeline();
+  }
+
+  /// 成稿主链路：先解析 Provider（真实 / 演示），再跑 STT → 成稿 → 预览 → 落框。
+  Future<void> _runPipeline() async {
+    await _refreshProvider();
     await pipeline.run(
       glossaryJson: widget.store.glossaryJson(),
       tone: 'im',
       bilingual: widget.store.bilingualWriteBack,
+      onError: (e) {
+        final scope = ServiceScope.maybeOf(context);
+        scope?.toasts.show('成稿失败 · ${e.code.name}');
+      },
       onFinal: (text) {
         _input.text = text;
         _inputFocus.requestFocus();
@@ -107,6 +163,17 @@ class _FlowPageState extends State<FlowPage> {
             child: Column(
               children: [
                 if (widget.showWindowChrome) const HostTitleBar(title: '微信 · 给李总的消息'),
+                // T-021：链路来源 + 真实错误条（Provider 血缘对用户透明）
+                ListenableBuilder(
+                  listenable: sm,
+                  builder: (context, _) => _ProviderBanner(
+                    source: _source,
+                    label: _modelLabel,
+                    error: sm.error,
+                    onDismiss: sm.clearError,
+                    onFallbackDemo: _fallbackDemo,
+                  ),
+                ),
                 Expanded(
                   child: Container(
                     color: s.bgWindow,
@@ -199,35 +266,140 @@ class _FlowPageState extends State<FlowPage> {
               ),
             ),
           ),
-          // 按住说话按钮
+          // 按住说话按钮（PRD §2.1：按住开始、松开成稿）
           Positioned(
             right: 20,
             bottom: 84,
-            child: GestureDetector(
-              onLongPressStart: (_) => _startHold(),
-              onLongPressEnd: (_) => _endHold(),
-              onLongPressCancel: _endHold,
-              child: Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: s.brandGrad,
-                  shape: BoxShape.circle,
-                  boxShadow: s.shadowBrand,
+            child: Semantics(
+              button: true,
+              label: '按住说话',
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                // 轻按即视为「按下」（PRD §2.1：按一下开始、再按一下结束）；
+                // 长按走 long* 分支，与 tap 分支互斥不会重复触发。
+                onTapDown: (_) => _startHold(),
+                onTapUp: (_) => unawaited(_endHold()),
+                onTapCancel: () => unawaited(_endHold()),
+                onLongPressStart: (_) => _startHold(),
+                onLongPressEnd: (_) => unawaited(_endHold()),
+                onLongPressCancel: () => unawaited(_endHold()),
+                child: ListenableBuilder(
+                  listenable: sm,
+                  builder: (_, __) {
+                    final recording = sm.phase == RecorderPhase.recording;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        gradient: s.brandGrad,
+                        shape: BoxShape.circle,
+                        boxShadow: s.shadowBrand,
+                        border: recording
+                            ? Border.all(color: s.error.withValues(alpha: 0.9), width: 2)
+                            : null,
+                      ),
+                      child: Center(
+                        child: Icon(
+                          recording ? Icons.stop_rounded : Icons.mic_rounded,
+                          size: 24,
+                          color: Colors.white.withValues(alpha: 0.95),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                child: Center(
-                  child: ListenableBuilder(
-                    listenable: sm,
-                    builder: (_, __) => Icon(
-                      Icons.mic_rounded,
-                      size: 24,
-                      color: sm.phase == RecorderPhase.recording
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.95),
-                    ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// T-021 · Provider 血缘条：当前成稿走真实模型还是演示流式，出错时内联展示原始返回。
+class _ProviderBanner extends StatelessWidget {
+  const _ProviderBanner({
+    required this.source,
+    required this.label,
+    this.error,
+    this.onDismiss,
+    this.onFallbackDemo,
+  });
+
+  final ProviderSource source;
+  final String label;
+  final LfProviderException? error;
+  final VoidCallback? onDismiss;
+
+  /// 真实模型不可用时，一键降级演示流式（PRD §7 绝不白屏）。
+  final VoidCallback? onFallbackDemo;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = LfScheme.of(context);
+    final real = source == ProviderSource.real;
+    if (error != null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        color: s.error.withValues(alpha: 0.10),
+        child: Row(
+          children: [
+            LfIcons.icon('warn', size: 12, color: s.error),
+            const SizedBox(width: 7),
+            Expanded(
+              child: Text(
+                '成稿失败 · ${error!.code.name} · ${error!.detail.length > 120 ? '${error!.detail.substring(0, 120)}…' : error!.detail}',
+                style: TextStyle(fontSize: LfDimens.fsXs, color: s.error),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (onFallbackDemo != null) ...[
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: onFallbackDemo,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: s.error.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '用演示流式重试',
+                    style: TextStyle(fontSize: LfDimens.fs2xs, color: s.error),
                   ),
                 ),
               ),
+            ],
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onDismiss,
+              child: LfIcons.icon('x', size: 11, color: s.error),
+            ),
+          ],
+        ),
+      );
+    }
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+      color: s.bgSource,
+      child: Row(
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: real ? s.success : s.warning, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
+              real ? '真实模型 · $label · 请求直连模型方（ADR-001）' : label,
+              style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text3),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

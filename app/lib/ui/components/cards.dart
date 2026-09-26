@@ -200,13 +200,6 @@ class ProviderRow extends StatelessWidget {
   }
 }
 
-PlatformCatalogItem? kPlatformCatalogLookup(String name) {
-  for (final i in kPlatformCatalog) {
-    if (name.contains(i.name) || i.name.contains(name)) return i;
-  }
-  return null;
-}
-
 /// 迷你图标按钮（行内删除等）。
 class _IconMiniButton extends StatelessWidget {
   const _IconMiniButton({required this.icon, required this.tooltip, required this.onTap});
@@ -550,55 +543,93 @@ class SkillCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(LfDimens.rCard),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(custom ? 12 : 14),
         decoration: BoxDecoration(
           color: custom ? s.brandSoft : s.bgWindow,
           borderRadius: BorderRadius.circular(LfDimens.rCard),
           border: Border.all(color: custom ? s.brand.withValues(alpha: 0.4) : s.divider),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: custom ? s.brand.withValues(alpha: 0.15) : s.brandSoft,
-                borderRadius: BorderRadius.circular(9),
+        // custom（新建 Skill）：横向横条布局，高度由内容撑开，避免窄高度下塌陷
+        child: custom
+            ? Row(
+                children: [
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: s.brand.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(child: LfIcons.icon(skill.icon, size: 15, color: s.brand)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          skill.name,
+                          style: TextStyle(
+                            fontSize: LfDimens.fsBase,
+                            fontWeight: FontWeight.w600,
+                            color: s.text,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          skill.meta,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: LfDimens.fsXs, color: s.text3),
+                        ),
+                      ],
+                    ),
+                  ),
+                  LfIcons.icon('chev', size: 14, color: s.text3),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: s.brandSoft,
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Center(child: LfIcons.icon(skill.icon, size: 16, color: s.brand)),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    skill.name,
+                    style: TextStyle(
+                      fontSize: LfDimens.fsBase,
+                      fontWeight: FontWeight.w600,
+                      color: s.text,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Expanded(
+                    child: Text(
+                      skill.desc,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: LfDimens.fsXs,
+                        color: s.text2,
+                        height: 1.55,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    skill.meta,
+                    style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text3),
+                  ),
+                ],
               ),
-              child: Center(
-                child: LfIcons.icon(skill.icon, size: 16, color: custom ? s.brand : s.brand),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              skill.name,
-              style: TextStyle(
-                fontSize: LfDimens.fsBase,
-                fontWeight: FontWeight.w600,
-                color: s.text,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Expanded(
-              child: Text(
-                skill.desc,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: LfDimens.fsXs,
-                  color: s.text2,
-                  height: 1.55,
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              skill.meta,
-              style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text3),
-            ),
-          ],
-        ),
       ),
     );
   }

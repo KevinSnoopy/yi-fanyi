@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../providers/provider.dart';
+
 /// ADR-008 · 录音条四态状态机（PRD v3.2 §2.1 流程 A）。
 ///
 /// 状态流转：`idle → recording → drafting → preview → done → idle`
@@ -27,6 +29,9 @@ class RecorderStateMachine extends ChangeNotifier {
   int _streamedChars = 0;
   String _previewText = '';
   String _finalText = '';
+
+  /// 最近一次真实 Provider 报错（T-021：内联错误条展示原始返回）。
+  LfProviderException? _error;
   Timer? _ticker;
   Timer? _previewTimer;
   Timer? _doneTimer;
@@ -39,6 +44,9 @@ class RecorderStateMachine extends ChangeNotifier {
   String get finalText => _finalText;
   bool get isBusy => _phase != RecorderPhase.idle;
 
+  /// 最近一次错误（非取消类）；[fail] 写入、[clearError] 清除。
+  LfProviderException? get error => _error;
+
   /// 录音中（每 100ms 心跳计时，供波形动画与 0:07 计时）。
   void startRecording() {
     if (_phase == RecorderPhase.recording) return;
@@ -47,6 +55,7 @@ class RecorderStateMachine extends ChangeNotifier {
     _recorded = Duration.zero;
     _streamedChars = 0;
     _previewText = '';
+    _error = null;
     _ticker = Timer.periodic(const Duration(milliseconds: 100), (_) {
       _recorded += const Duration(milliseconds: 100);
       notifyListeners();
@@ -89,6 +98,23 @@ class RecorderStateMachine extends ChangeNotifier {
     _phase = RecorderPhase.done;
     _finalText = text;
     _doneTimer = Timer(const Duration(milliseconds: 1500), reset);
+    notifyListeners();
+  }
+
+  /// 真实 Provider 失败（401/429/网络不可达…）：回 idle + 保留错误供内联展示。
+  ///
+  /// 绝不白屏（PRD §7）：链路失败也必须回到可操作态，并把模型方原始返回透出。
+  void fail(LfProviderException e) {
+    _cancelTimers();
+    _phase = RecorderPhase.idle;
+    _error = e;
+    notifyListeners();
+  }
+
+  /// 清除错误态（用户关闭错误条 / 重新开始录音）。
+  void clearError() {
+    if (_error == null) return;
+    _error = null;
     notifyListeners();
   }
 

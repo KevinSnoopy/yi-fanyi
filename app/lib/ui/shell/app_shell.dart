@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../core/icons/lf_icons.dart';
 import '../../core/theme/tokens.dart';
 import '../../services/app_store.dart';
+import '../../services/service_scope.dart';
 import '../components/common.dart';
+import '../overlays/floating_windows.dart' show Toast;
 import '../pages/flow_demos.dart';
 import '../pages/flow_page.dart';
 import '../pages/mobile_pages.dart';
@@ -14,6 +16,8 @@ import '../pages/settings_pages.dart';
 
 /// AppShell —— 主窗口骨架（原型 index.html menubar + tabs + 主舞台）：
 /// macOS 菜单栏（26px）+ 15 Tab 导航条 + 页面分发 + 亮暗主题切换。
+///
+/// 全舞台外包 [ServiceScope]，页面可按需取热键/触发/通知服务（T-022/T-024）。
 class AppShell extends StatelessWidget {
   const AppShell({
     super.key,
@@ -22,12 +26,16 @@ class AppShell extends StatelessWidget {
     required this.onTab,
     required this.dark,
     required this.onToggleTheme,
+    required this.services,
   });
 
   final AppStore store;
   final int tab; // 0..14 → A..O
   final void Function(int) onTab;
   final bool dark;
+
+  /// 运行期服务（热键 / 触发 / toast）。
+  final LfServices services;
   final VoidCallback onToggleTheme;
 
   static const List<(String, String)> tabs = [
@@ -51,22 +59,45 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = LfScheme.of(context);
-    return Column(
-      children: [
-        _MenuBar(dark: dark, onToggleTheme: onToggleTheme, onTab: onTab),
-        _TabBar(active: tab, onTab: onTab),
-        Divider(height: 1, color: s.divider),
-        Expanded(
-          child: AnimatedSwitcher(
-            duration: LfDimens.tBase,
-            child: KeyedSubtree(
-              key: ValueKey(tab),
-              child: _page(tab),
+    return ServiceScope(
+      services: services,
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              _MenuBar(dark: dark, onToggleTheme: onToggleTheme, onTab: onTab),
+              _TabBar(active: tab, onTab: onTab),
+              Divider(height: 1, color: s.divider),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: LfDimens.tBase,
+                  child: KeyedSubtree(
+                    key: ValueKey(tab),
+                    child: _page(tab),
+                  ),
+                ),
+              ),
+              _StatusBar(store: store, services: services),
+            ],
+          ),
+          // in-app toast 宿主（原生通知的降级呈现，T-022）
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 44,
+            child: ListenableBuilder(
+              listenable: services.toasts,
+              builder: (context, _) {
+                final msg = services.toasts.message;
+                if (msg == null) return const SizedBox.shrink();
+                return Center(
+                  child: Toast(message: msg, key: ValueKey(services.toasts.seq)),
+                );
+              },
             ),
           ),
-        ),
-        _StatusBar(store: store),
-      ],
+        ],
+      ),
     );
   }
 
@@ -352,14 +383,16 @@ class _SettingsLayout extends StatelessWidget {
 
 /// 底部状态条 —— 引擎 / Provider / 隐私态一眼可读（原型 showHint 提示带的常驻化）。
 class _StatusBar extends StatelessWidget {
-  const _StatusBar({required this.store});
+  const _StatusBar({required this.store, required this.services});
 
   final AppStore store;
+  final LfServices services;
 
   @override
   Widget build(BuildContext context) {
     final s = LfScheme.of(context);
     final profile = store.defaultProfile;
+    final report = services.hotkeys.lastReport;
     return Container(
       height: 24,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -372,9 +405,22 @@ class _StatusBar extends StatelessWidget {
           const StatusDot(ok: true, size: 6),
           const SizedBox(width: 6),
           Text(
-            profile == null ? '本地兜底 · MockProvider（未配置模型绝不白屏）' : '已连接 · ${profile.platform} · ${profile.model}',
+            profile == null ? '本地兜底 · MockProvider（未配置模型绝不白屏）' : '${profile.platform} · ${profile.model}',
             style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text3),
           ),
+          const SizedBox(width: 10),
+          // T-024：热键注册实况
+          Text(
+            services.hotkeys.paused ? '热键已禁用' : (report?.summary ?? '热键未注册'),
+            style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text3),
+          ),
+          if (services.hotkeys.conflictCount > 0) ...[
+            const SizedBox(width: 8),
+            Text(
+              '⚠ ${services.hotkeys.conflictCount} 处冲突',
+              style: TextStyle(fontSize: LfDimens.fs2xs, color: s.warning),
+            ),
+          ],
           const Spacer(),
           Text('零遥测', style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text3)),
           const SizedBox(width: 12),

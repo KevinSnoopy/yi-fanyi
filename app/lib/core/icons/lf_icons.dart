@@ -46,6 +46,7 @@ abstract final class LfIcons {
     'windows': '<rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1"/><rect x="13" y="13" width="7.5" height="7.5" rx="1"/>',
     'folder': '<path d="M3 7.5a2 2 0 0 1 2-2h4.2l2 2.2H19a2 2 0 0 1 2 2v8.8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
     'android': '<path d="M5.5 11a6.5 6.5 0 0 1 13 0z"/><path d="M7 7 5.5 4.8M17 7l1.5-2.2"/><circle cx="9.3" cy="9" r="0.3"/><circle cx="14.7" cy="9" r="0.3"/><path d="M5.5 11h13v5a2.2 2.2 0 0 1-2.2 2.2H7.7A2.2 2.2 0 0 1 5.5 16zM8.2 18.2v2.3M15.8 18.2v2.3"/>',
+    'chev': '<path d="M9.5 5.5 16 12l-6.5 6.5"/>',
   };
 
   /// 尺寸档位（原型 .ic / .ic.sm / .ic.lg / .ic.xl）
