@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>迷你悬浮窗四态 · 译语原型</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --brand: #4F7CFF;
+    --brand-soft: #4F7CFF1A;
+    --accent: #FF7A45;
+    --bg-window: #FFFFFFEB;
+    --bg-source: #F7F8FA;
+    --bg-elevated: #FFFFFF;
+    --text: #1D2129;
+    --text-2: #86909C;
+    --divider: #F0F1F5;
+    --error: #F53F3F;
+    --error-soft: #F53F3F14;
+    --success: #2BA471;
+    --shadow-window: 0 8px 24px rgba(0, 0, 0, 0.24);
+  }
+  html[data-theme="dark"] {
+    --brand: #5B8CFF;
+    --brand-soft: #5B8CFF22;
+    --accent: #FF8A5C;
+    --bg-window: #1E1F24E0;
+    --bg-source: #26282E;
+    --bg-elevated: #2A2C32;
+    --text: #E8EAED;
+    --text-2: #9AA0A6;
+    --divider: #2E3038;
+    --error: #F76965;
+    --error-soft: #F769651A;
+    --success: #3CCB91;
+    --shadow-window: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans", Inter, sans-serif;
+    background: var(--bg-source);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ===== 顶部控件 ===== */
+  .controls {
+    position: fixed; top: 16px; left: 16px;
+    display: flex; gap: 8px; align-items: center;
+    padding: 8px 12px;
+    background: var(--bg-window);
+    backdrop-filter: blur(12px);
+    border-radius: 10px;
+    box-shadow: var(--shadow-window);
+    font-size: 12px;
+    z-index: 9999;
+  }
+  .controls label { color: var(--text-2); }
+  .controls select, .controls button {
+    border: 1px solid var(--divider);
+    background: transparent;
+    color: var(--text);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font: inherit; cursor: pointer;
+  }
+  .controls button:hover { background: var(--brand-soft); }
+
+  /* ===== 悬浮窗 ===== */
+  /* PRD §5.1：380 × 自适应，圆角 14，阴影 y8 blur24 24%黑，动画 ≤ 180ms */
+  .fw {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 380px;
+    max-width: 90vw;
+    max-height: 480px;
+    display: flex; flex-direction: column;
+    background: var(--bg-window);
+    backdrop-filter: blur(12px);
+    border-radius: 14px;
+    box-shadow: var(--shadow-window);
+    overflow: hidden;
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+  .fw.enter { animation: enter 180ms ease both; }
+  @keyframes enter {
+    from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)); }
+    to   { opacity: 1; transform: translate(-50%, -50%); }
+  }
+
+  /* 顶部工具条 */
+  .fw-toolbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--divider);
+  }
+  .lang {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+  }
+  .lang .arrow { font-size: 10px; opacity: 0.7; }
+  .fw-toolbar .spacer { flex: 1; }
+  .icon-btn {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    color: var(--text-2);
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .icon-btn:hover { background: var(--brand-soft); color: var(--brand); }
+
+  /* 原文区 */
+  .src {
+    position: relative;
+    margin: 10px 12px 0;
+    padding: 10px 12px;
+    background: var(--bg-source);
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--text-2);
+    max-height: 100px;
+    overflow-y: auto;
+    transition: max-height 180ms ease;
+  }
+  .src.collapsed { max-height: 36px; }
+  .src.empty { color: var(--text-2); font-style: italic; }
+  .src-toggle {
+    position: absolute; top: 6px; right: 8px;
+    font-size: 11px; color: var(--text-2); cursor: pointer;
+  }
+
+  /* 译文区 */
+  .tgt {
+    position: relative;
+    margin: 8px 12px 0;
+    padding: 12px;
+    background: var(--bg-elevated);
+    border-radius: 10px;
+    font-size: 15px; /* PRD §5.2 译文区 15px */
+    line-height: 1.6;
+    color: var(--text);
+    min-height: 80px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .tgt-progress {
+    position: absolute; top: 0; left: 0;
+    height: 2px; background: var(--brand);
+    border-radius: 1px 1px 0 0;
+    width: 0%;
+    transition: width 200ms ease;
+  }
+  /* 光标闪烁模拟流式输出 */
+  .tgt-cursor {
+    display: inline-block;
+    width: 2px; height: 16px;
+    background: var(--brand);
+    vertical-align: text-bottom;
+    margin-left: 1px;
+    animation: blink 0.9s steps(2) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* 译文区浮动操作 */
+  .tgt-actions {
+    display: flex; gap: 6px;
+    margin: 6px 12px 0;
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .tgt-actions span { cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+  .tgt-actions span:hover { background: var(--brand-soft); color: var(--brand); }
+
+  /* 底部输入行 */
+  .fw-input {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px;
+    margin-top: auto;
+    border-top: 1px solid var(--divider);
+  }
+  .mic-btn {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .mic-btn:hover { background: var(--brand); color: white; }
+  .msg-input {
+    flex: 1;
+    border: none; outline: none;
+    background: transparent;
+    color: var(--text);
+    font: inherit; font-size: 14px;
+    padding: 4px 0;
+  }
+  .msg-input::placeholder { color: var(--text-2); }
+  .send-btn {
+    width: 32px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    background: var(--accent);
+    color: white;
+    border: none; cursor: pointer;
+    font-size: 14px;
+    transition: opacity 180ms ease;
+  }
+  .send-btn:disabled {
+    background: var(--divider);
+    color: var(--text-2);
+    cursor: not-allowed;
+  }
+
+  /* ===== 状态: 加载 ===== */
+  .state-loading .tgt::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, var(--brand-soft), transparent);
+    animation: shimmer 1.4s linear infinite;
+    border-radius: 10px;
+    pointer-events: none;
+  }
+  @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+  /* ===== 状态: 流式 ===== */
+  .state-streaming .tgt-progress { animation: progress 2.4s ease forwards; }
+  @keyframes progress { from { width: 0; } to { width: 100%; } }
+
+  /* ===== 状态: 失败 ===== */
+  .state-failed .tgt {
+    background: var(--error-soft);
+    color: var(--error);
+  }
+  .err-bar {
+    display: flex; align-items: center; gap: 8px;
+    margin: 8px 12px 0;
+    padding: 8px 10px;
+    background: var(--error-soft);
+    color: var(--error);
+    border-radius: 8px;
+    font-size: 12px;
+  }
+  .err-bar .icon { font-weight: 700; }
+  .err-bar .retry {
+    margin-left: auto;
+    color: var(--error);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .host {
+    max-width: 720px; margin: 80px auto 0;
+    padding: 24px;
+    background: white; border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    color: #1D2129;
+  }
+  html[data-theme="dark"] .host { background: #2A2C32; color: var(--text); }
+  .host h2 { margin: 0 0 12px; font-size: 14px; color: var(--text-2); font-weight: 500; }
+  .host p { line-height: 1.7; font-size: 14px; }
+
+  .footer-note {
+    margin: 24px auto; max-width: 720px;
+    font-size: 12px; color: var(--text-2); text-align: center;
+  }
+</style>
+</head>
+<body data-theme="light">
+
+<div class="controls">
+  <label>主题</label>
+  <select id="themeSel">
+    <option value="light">浅色</option>
+    <option value="dark">深色</option>
+  </select>
+  <label>状态</label>
+  <select id="stateSel">
+    <option value="empty">空态</option>
+    <option value="loading">加载</option>
+    <option value="streaming">流式</option>
+    <option value="failed">失败</option>
+  </select>
+</div>
+
+<article class="host">
+  <h2>模拟宿主应用 · 邮件撰写窗口</h2>
+  <p>悬浮窗以"伴随型"形态浮在屏幕中央 380px 宽；按 ⌥+空格 唤起；不抢焦点；流式输出期间用户可以继续在其他窗口工作。</p>
+</article>
+
+<!-- ===== 悬浮窗 ===== -->
+<section class="fw" id="fw">
+  <header class="fw-toolbar">
+    <span class="lang" title="点击切换语言方向">🌐 中 → 英 <span class="arrow">▾</span></span>
+    <span class="spacer"></span>
+    <span class="icon-btn" title="朗读" aria-label="朗读">🔊</span>
+    <span class="icon-btn" title="设置" aria-label="设置">⚙</span>
+    <span class="icon-btn" title="关闭" aria-label="关闭">✕</span>
+  </header>
+
+  <div class="src empty" id="src">
+    暂无原文（唤起时自动读取剪贴板，可折叠）
+    <span class="src-toggle" id="srcToggle">折叠</span>
+  </div>
+
+  <div class="tgt" id="tgt">
+    <div class="tgt-progress" id="tgtProgress"></div>
+    <span id="tgtText"></span>
+  </div>
+
+  <div class="tgt-actions" id="tgtActions" style="display:none">
+    <span>📋 复制</span>
+    <span>🔁 双语写回</span>
+    <span>⭐ 收藏</span>
+    <span>↻ 换 Profile 重译</span>
+  </div>
+
+  <div class="err-bar" id="errBar" style="display:none">
+    <span class="icon">⚠</span>
+    <span class="msg" id="errMsg">Key 无效：401 Unauthorized</span>
+    <span class="retry">直达配置页</span>
+  </div>
+
+  <footer class="fw-input">
+    <span class="mic-btn" title="按住说话">🎤</span>
+    <input class="msg-input" placeholder="输入消息…" id="msgInput" />
+    <button class="send-btn" disabled title="发送 (Enter)">➤</button>
+  </footer>
+</section>
+
+<div class="footer-note">PRD §5.3 ② 迷你悬浮窗 · 四态切换 · 380 × 自适应 · 圆角 14 · 阴影 y8 blur24</div>
+
+<script>
+  const fw = document.getElementById('fw');
+  const themeSel = document.getElementById('themeSel');
+  const stateSel = document.getElementById('stateSel');
+  const src = document.getElementById('src');
+  const srcToggle = document.getElementById('srcToggle');
+  const tgt = document.getElementById('tgt');
+  const tgtText = document.getElementById('tgtText');
+  const tgtProgress = document.getElementById('tgtProgress');
+  const tgtActions = document.getElementById('tgtActions');
+  const errBar = document.getElementById('errBar');
+  const msgInput = document.getElementById('msgInput');
+
+  const sampleSource = '那个报价我确认没问题，下周三之前可以签合同，请把最终版发我邮箱。';
+  const sampleTarget = 'Confirmed, the quote looks good. We can sign by next Wednesday — please send me the final version by email.';
+
+  let streamTimer = null;
+
+  function render(state) {
+    if (streamTimer) { clearInterval(streamTimer); streamTimer = null; }
+    fw.className = 'fw state-' + state + ' enter';
+
+    // 重置
+    src.classList.remove('collapsed', 'empty');
+    src.querySelector('.src-toggle').textContent = '折叠';
+    tgtText.innerHTML = '';
+    tgtProgress.style.width = '0%';
+    tgtProgress.style.animation = '';
+    tgtActions.style.display = 'none';
+    errBar.style.display = 'none';
+    tgt.style.background = '';
+    tgt.style.color = '';
+    msgInput.value = '';
+
+    if (state === 'empty') {
+      src.classList.add('empty');
+      src.firstChild.textContent = '暂无原文（唤起时自动读取剪贴板，可折叠）';
+      tgtText.textContent = '译文将出现在这里…';
+      tgt.style.color = 'var(--text-2)';
+    }
+    else if (state === 'loading') {
+      src.textContent = sampleSource;
+      src.appendChild(srcToggle);
+      tgtText.textContent = '';
+      // shimmer 由 CSS ::after 实现
+    }
+    else if (state === 'streaming') {
+      src.textContent = sampleSource;
+      src.appendChild(srcToggle);
+      // 流式打字机效果
+      let i = 0;
+      tgtText.innerHTML = '<span class="tgt-cursor"></span>';
+      streamTimer = setInterval(() => {
+        if (i >= sampleTarget.length) {
+          clearInterval(streamTimer); streamTimer = null;
+          tgtText.innerHTML = sampleTarget;
+          tgtActions.style.display = 'flex';
+          return;
+        }
+        const chunk = sampleTarget.slice(0, i + 2);
+        tgtText.innerHTML = chunk + '<span class="tgt-cursor"></span>';
+        i += 2;
+        // 顶部进度条
+        tgtProgress.style.width = Math.min(100, (i / sampleTarget.length) * 100) + '%';
+      }, 60);
+    }
+    else if (state === 'failed') {
+      src.textContent = sampleSource;
+      src.appendChild(srcToggle);
+      tgtText.textContent = '翻译失败，请稍后重试';
+      errBar.style.display = 'flex';
+      tgtActions.style.display = 'none';
+    }
+  }
+
+  // 原文区折叠切换
+  srcToggle.addEventListener('click', () => {
+    src.classList.toggle('collapsed');
+    srcToggle.textContent = src.classList.contains('collapsed') ? '展开' : '折叠';
+  });
+
+  // 控件事件
+  themeSel.addEventListener('change', e => {
+    document.documentElement.dataset.theme = e.target.value;
+  });
+  stateSel.addEventListener('change', e => render(e.target.value));
+
+  // 输入框控制发送键置灰（PRD §5.3 ② 空输入时发送键置灰）
+  msgInput.addEventListener('input', e => {
+    const btn = fw.querySelector('.send-btn');
+    btn.disabled = e.target.value.trim().length === 0;
+  });
+
+  // 初始渲染
+  render('empty');
+</script>
+</body>
+</html>

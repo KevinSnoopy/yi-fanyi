@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>译语 · 设计原型演示</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --brand: #4F7CFF;
+    --brand-soft: #4F7CFF1A;
+    --accent: #FF7A45;
+    --bg: #F7F8FA;
+    --bg-elevated: #FFFFFF;
+    --text: #1D2129;
+    --text-2: #86909C;
+    --divider: #F0F1F5;
+    --error: #F53F3F;
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-window: 0 8px 24px rgba(0, 0, 0, 0.24);
+  }
+  html[data-theme="dark"] {
+    --brand: #5B8CFF;
+    --brand-soft: #5B8CFF22;
+    --accent: #FF8A5C;
+    --bg: #1B1D21;
+    --bg-elevated: #2A2C32;
+    --text: #E8EAED;
+    --text-2: #9AA0A6;
+    --divider: #2E3038;
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-window: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans", Inter, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 200px;
+    transition: background-color 180ms ease, color 180ms ease;
+  }
+
+  /* ===== 顶部 Hero ===== */
+  .hero {
+    padding: 60px 40px 40px;
+    max-width: 1080px; margin: 0 auto;
+  }
+  .hero h1 {
+    margin: 0 0 8px;
+    font-size: 28px; font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .hero .tagline {
+    color: var(--text-2); font-size: 15px; line-height: 1.6;
+    max-width: 640px;
+  }
+  .hero .meta {
+    margin-top: 16px; font-size: 12px; color: var(--text-2);
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .hero .meta span code {
+    background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px;
+    border: 1px solid var(--divider);
+  }
+
+  /* ===== 顶部控件条 ===== */
+  .controls {
+    position: fixed; top: 16px; right: 16px;
+    display: flex; gap: 8px; align-items: center;
+    padding: 8px 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--divider);
+    border-radius: 10px;
+    box-shadow: var(--shadow-card);
+    font-size: 12px;
+    z-index: 9999;
+  }
+  .controls label { color: var(--text-2); margin-left: 4px; }
+  .controls select {
+    border: 1px solid var(--divider);
+    background: transparent;
+    color: var(--text);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font: inherit; cursor: pointer;
+  }
+
+  /* ===== 双栏布局 ===== */
+  .grid {
+    max-width: 1080px; margin: 0 auto;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 880px) {
+    .grid { grid-template-columns: 1fr; padding: 0 24px; }
+  }
+
+  .panel {
+    background: var(--bg-elevated);
+    border: 1px solid var(--divider);
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: var(--shadow-card);
+  }
+  .panel h2 {
+    margin: 0 0 6px;
+    font-size: 16px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel h2 .badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .panel .desc {
+    font-size: 13px; color: var(--text-2); line-height: 1.6;
+    margin: 0 0 20px;
+  }
+  .panel .stage {
+    background: var(--bg);
+    border: 1px solid var(--divider);
+    border-radius: 10px;
+    height: 260px;
+    position: relative;
+    overflow: hidden;
+  }
+  .panel .state-info {
+    margin-top: 12px;
+    font-size: 12px; color: var(--text-2);
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .panel .state-info code {
+    background: var(--bg); padding: 2px 6px; border-radius: 4px;
+    border: 1px solid var(--divider);
+  }
+
+  /* ===== 录音条（嵌入 stage）===== */
+  .bar {
+    position: absolute;
+    left: 50%; bottom: 32px;
+    transform: translateX(-50%);
+    width: 280px; height: 32px;
+    display: flex; align-items: center;
+    padding: 0 10px;
+    gap: 8px;
+    border-radius: 10px;
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-window);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1;
+  }
+  .bar .mic {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--brand);
+    box-shadow: 0 0 0 4px var(--brand-soft);
+    animation: pulse 1.4s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 4px var(--brand-soft); }
+    50%      { box-shadow: 0 0 0 8px var(--brand-soft); }
+  }
+  .bar .wave {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    gap: 2px; height: 16px;
+  }
+  .bar .wave span {
+    display: block; width: 2px;
+    background: var(--brand);
+    border-radius: 1px;
+    animation: wave 1.2s ease-in-out infinite;
+  }
+  .bar .wave span:nth-child(1) { animation-delay: 0.00s; height: 6px; }
+  .bar .wave span:nth-child(2) { animation-delay: 0.15s; height: 12px; }
+  .bar .wave span:nth-child(3) { animation-delay: 0.30s; height: 16px; }
+  .bar .wave span:nth-child(4) { animation-delay: 0.45s; height: 10px; }
+  .bar .wave span:nth-child(5) { animation-delay: 0.60s; height: 14px; }
+  .bar .wave span:nth-child(6) { animation-delay: 0.75s; height: 8px; }
+  .bar .wave span:nth-child(7) { animation-delay: 0.90s; height: 12px; }
+  @keyframes wave {
+    0%, 100% { transform: scaleY(0.5); }
+    50%      { transform: scaleY(1.0); }
+  }
+  .bar .timer { color: var(--text-2); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .bar .cancel { color: var(--text-2); cursor: pointer; }
+  .bar .cancel:hover { color: var(--error); }
+
+  .bar .icon {
+    width: 14px; height: 14px;
+    border: 2px solid var(--brand);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .bar .msg { flex: 1; }
+  .bar .count { color: var(--text-2); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .bar .actions { display: flex; gap: 6px; }
+  .bar .actions span { color: var(--text-2); cursor: pointer; font-size: 12px; }
+  .bar .actions .cancel-btn:hover { color: var(--error); }
+
+  .bar .check {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #2BA471; color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; flex-shrink: 0;
+  }
+  .bar .preview-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+  }
+  .bar .progress {
+    position: absolute; left: 10px; right: 10px; bottom: 2px;
+    height: 2px;
+    background: var(--brand);
+    border-radius: 1px;
+    transform-origin: left;
+    animation: countdown 1.2s linear forwards;
+  }
+  @keyframes countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+  /* ===== 悬浮窗（嵌入 stage）===== */
+  .fw {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px; max-width: 90%;
+    display: flex; flex-direction: column;
+    background: var(--bg-elevated);
+    border-radius: 14px;
+    box-shadow: var(--shadow-window);
+    overflow: hidden;
+    font-size: 13px;
+  }
+  .fw-toolbar {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--divider);
+  }
+  .lang {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    border-radius: 6px;
+    font-size: 12px; font-weight: 500;
+  }
+  .fw-toolbar .spacer { flex: 1; }
+  .icon-btn {
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    color: var(--text-2);
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .icon-btn:hover { background: var(--brand-soft); color: var(--brand); }
+
+  .src {
+    margin: 8px 10px 0;
+    padding: 8px 10px;
+    background: var(--bg);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-2);
+    max-height: 60px;
+    overflow-y: auto;
+  }
+  .src.empty { font-style: italic; }
+
+  .tgt {
+    position: relative;
+    margin: 6px 10px 0;
+    padding: 10px;
+    background: var(--bg);
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text);
+    min-height: 70px;
+    max-height: 130px;
+    overflow-y: auto;
+  }
+  .tgt-progress {
+    position: absolute; top: 0; left: 0;
+    height: 2px; background: var(--brand);
+    border-radius: 1px 1px 0 0;
+    width: 0%;
+  }
+  .tgt-cursor {
+    display: inline-block;
+    width: 2px; height: 14px;
+    background: var(--brand);
+    vertical-align: text-bottom;
+    margin-left: 1px;
+    animation: blink 0.9s steps(2) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .fw-input {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 10px;
+    margin-top: auto;
+    border-top: 1px solid var(--divider);
+  }
+  .mic-btn {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .msg-input {
+    flex: 1;
+    border: none; outline: none;
+    background: transparent;
+    color: var(--text);
+    font: inherit; font-size: 13px;
+  }
+  .send-btn {
+    width: 28px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    background: var(--accent); color: white;
+    border: none; cursor: pointer;
+    font-size: 13px;
+  }
+
+  .state-failed .tgt { background: #F53F3F14; color: var(--error); }
+  html[data-theme="dark"] .state-failed .tgt { background: #F769651A; color: var(--error); }
+  .err-bar {
+    display: flex; align-items: center; gap: 6px;
+    margin: 6px 10px 0;
+    padding: 6px 8px;
+    background: #F53F3F14; color: var(--error);
+    border-radius: 6px; font-size: 11px;
+  }
+  html[data-theme="dark"] .err-bar { background: #F769651A; }
+  .err-bar .retry { margin-left: auto; cursor: pointer; text-decoration: underline; }
+
+  .footer-note {
+    margin: 40px auto 0; max-width: 1080px;
+    padding: 0 40px;
+    font-size: 12px; color: var(--text-2); text-align: center;
+  }
+</style>
+</head>
+<body data-theme="light">
+
+<div class="controls">
+  <label>主题</label>
+  <select id="themeSel">
+    <option value="light">浅色</option>
+    <option value="dark">深色</option>
+  </select>
+  <label>录音条</label>
+  <select id="barSel">
+    <option value="recording">说话态</option>
+    <option value="processing">处理态</option>
+    <option value="preview">预览态</option>
+  </select>
+  <label>悬浮窗</label>
+  <select id="fwSel">
+    <option value="empty">空态</option>
+    <option value="loading">加载</option>
+    <option value="streaming">流式</option>
+    <option value="failed">失败</option>
+  </select>
+</div>
+
+<header class="hero">
+  <h1>译语 / LinguaFlow · 设计原型</h1>
+  <p class="tagline">录音 / 状态条三态 + 迷你悬浮窗四态。设计 Token 严格按 PRD §5.2 硬编码，便于评审与后续 Design Token 系统抽取。</p>
+  <div class="meta">
+    <span>任务 <code>T-010</code></span>
+    <span>PRD <code>§5.3 ① ②</code></span>
+    <span>文件 <code>prototypes/</code></span>
+  </div>
+</header>
+
+<main class="grid">
+  <!-- ===== 录音条面板 ===== -->
+  <section class="panel">
+    <h2>录音 / 状态条 <span class="badge">PRD §5.3 ①</span></h2>
+    <p class="desc">屏幕底部居中偏上 80px · 280 × 32px · 圆角 10 · 三态：说话 / 处理 / 预览。流程 A「按住 Fn 说话」最高频组件。</p>
+    <div class="stage" id="barStage">
+      <div class="bar" id="bar"></div>
+    </div>
+    <div class="state-info">
+      <span>当前态 <code id="barStateLabel">recording</code></span>
+      <span>性能目标 <code>热键→可见 &lt; 150ms</code></span>
+      <span>波形 <code>60fps</code></span>
+    </div>
+  </section>
+
+  <!-- ===== 悬浮窗面板 ===== -->
+  <section class="panel">
+    <h2>迷你悬浮窗 <span class="badge">PRD §5.3 ②</span></h2>
+    <p class="desc">380 × 自适应 · 圆角 14 · 阴影 y8 blur24 · 动画 ≤ 180ms · 四态：空 / 加载 / 流式 / 失败。流程 B / C / D 共用底座。</p>
+    <div class="stage" id="fwStage">
+      <section class="fw" id="fw">
+        <header class="fw-toolbar">
+          <span class="lang">🌐 中 → 英 ▾</span>
+          <span class="spacer"></span>
+          <span class="icon-btn">🔊</span>
+          <span class="icon-btn">⚙</span>
+          <span class="icon-btn">✕</span>
+        </header>
+        <div class="src" id="src"></div>
+        <div class="tgt" id="tgt">
+          <div class="tgt-progress" id="tgtProgress"></div>
+          <span id="tgtText"></span>
+        </div>
+        <div class="err-bar" id="errBar" style="display:none">
+          <span>⚠</span>
+          <span id="errMsg">Key 无效：401</span>
+          <span class="retry">直达配置页</span>
+        </div>
+        <footer class="fw-input">
+          <span class="mic-btn">🎤</span>
+          <input class="msg-input" placeholder="输入消息…" />
+          <button class="send-btn">➤</button>
+        </footer>
+      </section>
+    </div>
+    <div class="state-info">
+      <span>当前态 <code id="fwStateLabel">empty</code></span>
+      <span>圆角 <code>14px</code></span>
+      <span>阴影 <code>y8 blur24 24%黑</code></span>
+    </div>
+  </section>
+</main>
+
+<div class="footer-note">
+  纯 HTML / CSS / JS · 零依赖 · git diff 即变更 · 验收通过后 1:1 平移为 Flutter widget
+</div>
+
+<script>
+  const bar = document.getElementById('bar');
+  const fw = document.getElementById('fw');
+  const themeSel = document.getElementById('themeSel');
+  const barSel = document.getElementById('barSel');
+  const fwSel = document.getElementById('fwSel');
+  const barStateLabel = document.getElementById('barStateLabel');
+  const fwStateLabel = document.getElementById('fwStateLabel');
+  const src = document.getElementById('src');
+  const tgt = document.getElementById('tgt');
+  const tgtText = document.getElementById('tgtText');
+  const tgtProgress = document.getElementById('tgtProgress');
+  const errBar = document.getElementById('errBar');
+
+  const sampleSource = '那个报价我确认没问题，下周三之前可以签合同，请把最终版发我邮箱。';
+  const sampleTarget = 'Confirmed, the quote looks good. We can sign by next Wednesday — please send me the final version by email.';
+
+  let streamTimer = null;
+  let timerInt = null;
+  let countInt = null;
+
+  function renderBar(state) {
+    if (streamTimer) { clearInterval(streamTimer); streamTimer = null; }
+    if (timerInt) { clearInterval(timerInt); timerInt = null; }
+    if (countInt) { clearInterval(countInt); countInt = null; }
+    barStateLabel.textContent = state;
+
+    if (state === 'recording') {
+      bar.innerHTML = `
+        <span class="mic"></span>
+        <div class="wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <span class="timer" id="timer">00:00</span>
+        <span class="cancel">✕</span>
+      `;
+      let sec = 0;
+      timerInt = setInterval(() => {
+        sec++;
+        const m = String(Math.floor(sec/60)).padStart(2,'0');
+        const s = String(sec%60).padStart(2,'0');
+        const el = document.getElementById('timer');
+        if (el) el.textContent = `${m}:${s}`;
+      }, 1000);
+    } else if (state === 'processing') {
+      bar.innerHTML = `
+        <span class="icon"></span>
+        <span class="msg">翻译中…</span>
+        <span class="count" id="count">已输出 0 字</span>
+        <span class="actions"><span title="展开">↗</span><span class="cancel-btn" title="取消">✕</span></span>
+      `;
+      let n = 0;
+      countInt = setInterval(() => {
+        n = Math.min(n+3, 48);
+        const el = document.getElementById('count');
+        if (el) el.textContent = `已输出 ${n} 字`;
+      }, 120);
+    } else if (state === 'preview') {
+      bar.innerHTML = `
+        <span class="check">✓</span>
+        <span class="preview-text">"Confirmed, we can sign by Wednesday."</span>
+        <div class="progress"></div>
+      `;
+    }
+  }
+
+  function renderFw(state) {
+    if (streamTimer) { clearInterval(streamTimer); streamTimer = null; }
+    fw.className = 'fw state-' + state;
+    fwStateLabel.textContent = state;
+
+    src.classList.remove('empty');
+    tgtText.innerHTML = '';
+    tgtProgress.style.width = '0%';
+    errBar.style.display = 'none';
+
+    if (state === 'empty') {
+      src.classList.add('empty');
+      src.textContent = '暂无原文（唤起时自动读取剪贴板）';
+      tgtText.textContent = '译文将出现在这里…';
+      tgt.style.color = 'var(--text-2)';
+    }
+    else if (state === 'loading') {
+      src.textContent = sampleSource;
+      tgtText.textContent = '';
+      tgt.style.color = '';
+    }
+    else if (state === 'streaming') {
+      src.textContent = sampleSource;
+      tgt.style.color = '';
+      let i = 0;
+      tgtText.innerHTML = '<span class="tgt-cursor"></span>';
+      streamTimer = setInterval(() => {
+        if (i >= sampleTarget.length) {
+          clearInterval(streamTimer); streamTimer = null;
+          tgtText.innerHTML = sampleTarget;
+          return;
+        }
+        const chunk = sampleTarget.slice(0, i + 2);
+        tgtText.innerHTML = chunk + '<span class="tgt-cursor"></span>';
+        i += 2;
+        tgtProgress.style.width = Math.min(100, (i / sampleTarget.length) * 100) + '%';
+      }, 60);
+    }
+    else if (state === 'failed') {
+      src.textContent = sampleSource;
+      tgtText.textContent = '翻译失败，请稍后重试';
+      errBar.style.display = 'flex';
+    }
+  }
+
+  themeSel.addEventListener('change', e => {
+    document.documentElement.dataset.theme = e.target.value;
+  });
+  barSel.addEventListener('change', e => renderBar(e.target.value));
+  fwSel.addEventListener('change', e => renderFw(e.target.value));
+
+  renderBar('recording');
+  renderFw('streaming'); // 默认展示流式，最有视觉冲击
+</script>
+</body>
+</html>

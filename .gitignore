@@ -72,3 +72,8 @@ GoogleService-Info.plist
 *.bak
 *.tmp
 *.orig
+
+# Python (subagent 残留)
+__pycache__/
+*.pyc
+*.pyo

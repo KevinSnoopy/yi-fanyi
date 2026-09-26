@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>录音 / 状态条三态 · 译语原型</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    /* PRD §5.2 浅色 token */
+    --brand: #4F7CFF;
+    --brand-soft: #4F7CFF1A;
+    --accent: #FF7A45;
+    --bg-bar: #FFFFFFEB;
+    --bg-source: #F7F8FA;
+    --text: #1D2129;
+    --text-2: #86909C;
+    --divider: #F0F1F5;
+    --error: #F53F3F;
+    --success: #2BA471;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  }
+  html[data-theme="dark"] {
+    /* PRD §5.2 深色 token */
+    --brand: #5B8CFF;
+    --brand-soft: #5B8CFF22;
+    --accent: #FF8A5C;
+    --bg-bar: #1E1F24E0;
+    --bg-source: #26282E;
+    --text: #E8EAED;
+    --text-2: #9AA0A6;
+    --divider: #2E3038;
+    --error: #F76965;
+    --success: #3CCB91;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans", Inter, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg-source);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background-color 180ms ease, color 180ms ease;
+  }
+
+  /* ===== 顶部控件条 ===== */
+  .controls {
+    position: fixed; top: 16px; left: 16px;
+    display: flex; gap: 8px; align-items: center;
+    padding: 8px 12px;
+    background: var(--bg-bar);
+    backdrop-filter: blur(12px);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    font-size: 12px;
+    z-index: 9999;
+  }
+  .controls label { color: var(--text-2); }
+  .controls select, .controls button {
+    border: 1px solid var(--divider);
+    background: transparent;
+    color: var(--text);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font: inherit;
+    cursor: pointer;
+  }
+  .controls button:hover { background: var(--brand-soft); }
+
+  /* ===== 录音条基类 ===== */
+  .bar {
+    /* PRD §5.1 录音/状态条 280 × 32，底部居中偏上 80px */
+    position: fixed;
+    left: 50%; bottom: 80px;
+    transform: translateX(-50%) translateY(0);
+    width: 280px; height: 32px;
+    display: flex; align-items: center;
+    padding: 0 10px;
+    gap: 8px;
+    border-radius: 10px;
+    background: var(--bg-bar);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1;
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+  .bar.enter { animation: enter 180ms ease both; }
+  @keyframes enter {
+    from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  /* ===== 说话态 ===== */
+  .state-recording .mic {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--brand);
+    box-shadow: 0 0 0 4px var(--brand-soft);
+    animation: pulse 1.4s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 4px var(--brand-soft); }
+    50%      { box-shadow: 0 0 0 8px var(--brand-soft); }
+  }
+  .wave {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    gap: 2px; height: 16px;
+  }
+  .wave span {
+    display: block; width: 2px;
+    background: var(--brand);
+    border-radius: 1px;
+    animation: wave 1.2s ease-in-out infinite;
+  }
+  .wave span:nth-child(1) { animation-delay: 0.00s; height: 6px; }
+  .wave span:nth-child(2) { animation-delay: 0.15s; height: 12px; }
+  .wave span:nth-child(3) { animation-delay: 0.30s; height: 16px; }
+  .wave span:nth-child(4) { animation-delay: 0.45s; height: 10px; }
+  .wave span:nth-child(5) { animation-delay: 0.60s; height: 14px; }
+  .wave span:nth-child(6) { animation-delay: 0.75s; height: 8px; }
+  .wave span:nth-child(7) { animation-delay: 0.90s; height: 12px; }
+  @keyframes wave {
+    0%, 100% { transform: scaleY(0.5); }
+    50%      { transform: scaleY(1.0); }
+  }
+  .timer { color: var(--text-2); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .state-recording .cancel {
+    color: var(--text-2); cursor: pointer; user-select: none;
+    width: 16px; text-align: center;
+  }
+  .state-recording .cancel:hover { color: var(--error); }
+
+  /* ===== 处理态 ===== */
+  .state-processing .icon {
+    width: 14px; height: 14px;
+    border: 2px solid var(--brand);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .state-processing .msg { flex: 1; color: var(--text); }
+  .state-processing .count { color: var(--text-2); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .state-processing .actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .state-processing .actions span {
+    color: var(--text-2); cursor: pointer; user-select: none;
+    font-size: 12px;
+  }
+  .state-processing .actions span:hover { color: var(--brand); }
+  .state-processing .actions .cancel-btn:hover { color: var(--error); }
+
+  /* ===== 预览态 ===== */
+  .state-preview .check {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--success);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; flex-shrink: 0;
+  }
+  .state-preview .preview-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text);
+    font-size: 13px;
+  }
+  .state-preview .progress {
+    position: absolute; left: 10px; right: 10px; bottom: 2px;
+    height: 2px;
+    background: var(--brand);
+    border-radius: 1px;
+    transform-origin: left;
+    animation: countdown 1.2s linear forwards;
+  }
+  @keyframes countdown {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+  }
+
+  /* ===== 模拟宿主背景（让"伴随型"感更明显） ===== */
+  .host {
+    max-width: 720px;
+    margin: 80px auto 0;
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    color: #1D2129;
+  }
+  html[data-theme="dark"] .host { background: #2A2C32; color: var(--text); }
+  .host h2 { margin: 0 0 12px; font-size: 14px; color: var(--text-2); font-weight: 500; }
+  .host p { line-height: 1.7; font-size: 14px; }
+
+  .footer-note {
+    margin: 24px auto; max-width: 720px;
+    font-size: 12px; color: var(--text-2); text-align: center;
+  }
+</style>
+</head>
+<body data-theme="light">
+
+<div class="controls">
+  <label>主题</label>
+  <select id="themeSel">
+    <option value="light">浅色</option>
+    <option value="dark">深色</option>
+  </select>
+  <label>状态</label>
+  <select id="stateSel">
+    <option value="recording">说话态</option>
+    <option value="processing">处理态</option>
+    <option value="preview">预览态</option>
+  </select>
+  <button id="replayBtn">重播</button>
+</div>
+
+<article class="host">
+  <h2>模拟宿主应用 · WhatsApp 聊天窗口</h2>
+  <p>那个报价我确认没问题，下周三之前可以签合同</p>
+  <p style="color:#86909C;font-size:12px;">↑ 这是用户当前输入框里已有的内容</p>
+  <p>录音条会以"伴随型"形式浮在屏幕底部居中偏上 80px，不会抢占焦点，也不会打断用户对宿主应用的视觉注意力。</p>
+</article>
+
+<!-- ===== 录音条 ===== -->
+<div class="bar state-recording" id="bar">
+  <!-- 内容由 JS 注入 -->
+</div>
+
+<div class="footer-note">PRD §5.3 ① 录音 / 状态条 · 三态切换预览 · 280 × 32px · 底部居中偏上 80px</div>
+
+<script>
+  const bar = document.getElementById('bar');
+  const themeSel = document.getElementById('themeSel');
+  const stateSel = document.getElementById('stateSel');
+  const replayBtn = document.getElementById('replayBtn');
+
+  // PRD §2.1 流程 A：预览态 1.2s 后自动写入
+  let previewTimer = null;
+
+  function render(state) {
+    bar.className = 'bar state-' + state + ' enter';
+    if (state === 'recording') {
+      bar.innerHTML = `
+        <span class="mic" aria-hidden="true"></span>
+        <div class="wave" aria-label="波形">
+          <span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+        <span class="timer" id="timer">00:00</span>
+        <span class="cancel" title="松开 Fn 停止" aria-label="取消">✕</span>
+      `;
+      startTimer();
+    } else if (state === 'processing') {
+      bar.innerHTML = `
+        <span class="icon" aria-hidden="true"></span>
+        <span class="msg">翻译中…</span>
+        <span class="count" id="count">已输出 0 字</span>
+        <span class="actions">
+          <span title="展开编辑" aria-label="展开">↗</span>
+          <span class="cancel-btn" title="取消" aria-label="取消">✕</span>
+        </span>
+      `;
+      startCount();
+    } else if (state === 'preview') {
+      bar.innerHTML = `
+        <span class="check" aria-hidden="true">✓</span>
+        <span class="preview-text">"Confirmed, we can sign by Wednesday."</span>
+        <div class="progress"></div>
+      `;
+      if (previewTimer) clearTimeout(previewTimer);
+      previewTimer = setTimeout(() => {
+        // PRD §2.1：预览 1.2s 后自动写入输入框并消失
+        console.log('[mock] 写入宿主输入框 + 录音条消失');
+        bar.style.opacity = '0';
+        setTimeout(() => { bar.style.opacity = '1'; }, 400);
+      }, 1200);
+    }
+  }
+
+  // 说话态计时器
+  let timerInt = null;
+  function startTimer() {
+    clearInterval(timerInt);
+    let sec = 0;
+    const el = () => document.getElementById('timer');
+    timerInt = setInterval(() => {
+      sec += 1;
+      const m = String(Math.floor(sec / 60)).padStart(2, '0');
+      const s = String(sec % 60).padStart(2, '0');
+      if (el()) el().textContent = `${m}:${s}`;
+    }, 1000);
+  }
+
+  // 处理态字数递增
+  let countInt = null;
+  function startCount() {
+    clearInterval(countInt);
+    let n = 0;
+    const el = () => document.getElementById('count');
+    countInt = setInterval(() => {
+      n = Math.min(n + 3, 48);
+      if (el()) el().textContent = `已输出 ${n} 字`;
+    }, 120);
+  }
+
+  // 控件事件
+  themeSel.addEventListener('change', e => {
+    document.documentElement.dataset.theme = e.target.value;
+  });
+  stateSel.addEventListener('change', e => {
+    if (previewTimer) { clearTimeout(previewTimer); previewTimer = null; }
+    render(e.target.value);
+  });
+  replayBtn.addEventListener('click', () => {
+    if (previewTimer) { clearTimeout(previewTimer); previewTimer = null; }
+    render(stateSel.value);
+  });
+
+  // 初始渲染
+  render('recording');
+</script>
+</body>
+</html>
