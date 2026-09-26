@@ -1,13 +1,13 @@
 ---
-phase: "Phase 1 · 设计（v7 成稿范式 13 页原型已落地，等用户走查验收）"
-stage: awaiting-v7-原型-验收
+phase: "Phase 2 · 真实代码开发（Flutter 工程 13 页全量落地，Web 端可运行可冒烟）"
+stage: flutter-app-skeleton-done
 last_updated: 2026-09-26
-current_focus: "T-015 ✅：按用户拍板参考系 Typeless + Chatterfly 完成 PRD v3.2 定位对齐（成稿为主、翻译是开关）与 v7 原型（prototypes/v7-spa/，Tab A 成稿范式 + pill 录音条 + 翻译开关默认关，Tab K Skills 六场景）。等用户验收 v7"
-next_action: "等用户走查 v7（prototypes/v7-spa/index.html，重点 Tab A 手感：成稿默认 + 「译」开关）；验收通过后 T-012 字段级规格可直接开工"
+current_focus: "T-020 ✅ Flutter 工程脚手架落地 app/（Flutter 3.47.5，三层架构 + ADR-007 四 Provider 流式实现 + ADR-008 状态机/pill/pipeline），13 页 UI 全量落地；flutter analyze 0 issue；Web release 构建 + 冒烟 15/15 PASS 0 错误；核心链路（按住说话→成稿→1.2s 预览→落框）Playwright 实测通过"
+next_action: "T-021 完成态：真实 Provider 联调（Key/SecureStore + testConnection + 真实流式）；随后 macOS 原生壳（全局热键/文本注入/悬浮窗）接 NoopNativeBridge 挂点"
 blockers:
-  - "v7 原型验收（用户走查 Tab A 成稿手感与六场景 Skills）"
+  - "macOS 原生壳与全局热键（Web 演示态已就绪，桌面端触发待实现）"
   - "License 未定（README 标 TBD）"
-has_code: false
+has_code: true
 ---
 
 # CONTEXT · 当前进度
@@ -16,15 +16,16 @@ has_code: false
 
 ## 1. 当前阶段
 
-**Phase 1 · 设计**（无产品代码，`has_code: false`）
+**Phase 2 · 真实代码开发**（`has_code: true`，代码在 [`app/`](../app/)）
 
-已完成：PRD v3.2（定位对齐，随 `PRD_v3.0.md` 文件名沿用）+ 8 个 ADR（001-008）+ v5 SPA（7 tab，留档）+ v6 SPA（13/13，T-017 ✅）+ **v7 SPA 成稿范式原型（13/13，T-015 ✅）** + 4 家竞品设计调研（T-014）+ Chatterfly/Typeless 竞品情报更新（T-003 部分）。
-当前卡点：v7 走查验收等用户。
+已完成：PRD v3.2 + 8 个 ADR + v7 SPA 原型（13/13）+ 竞品调研 + **Flutter 工程（T-020 ✅）：13 页 UI 全量、ADR-007 四 Provider 流式实现、ADR-008 核心链路 Mock 可跑、analyze 0 issue、Web 冒烟 15/15 PASS**。
+当前卡点：真实 Provider 联调与 macOS 原生集成。
 
 ## 2. 最近一轮做了什么
 
 | 日期 | 会话 | 成果 |
 |---|---|---|
+| 2026-09-26 | [`2026-09-26-09-flutter-app-skeleton`](./sessions/2026-09-26-09-flutter-app-skeleton.md) | T-020 ✅：`app/` Flutter 3.47.5 工程落地（tokens/LfIcons/ADR-007 四 Provider + CancelToken/ADR-008 状态机 + DraftPipeline/13 页 UI + AppShell/main）。修复首编 85 error + CanvasKit 中文字体打包（Noto Sans CJK SC）+ Material 祖先缺失 + L 页溢出。`flutter analyze` 0 issue；`flutter build web --release` ✓；冒烟 15/15 PASS 0 JS 错误；核心链路（长按🎤→录音 pill→成稿→预览 1.2s→落框）实测通过 |
 | 2026-09-26 | [`2026-09-26-08-t015-typeless-chatterfly`](./sessions/2026-09-26-08-t015-typeless-chatterfly.md) | T-015 ✅：用户拍板参考系 **Typeless + Chatterfly**（成稿为主、翻译是开关）。PRD v3.2 定位对齐（§1.1/§1.4/§2 流程 A/§3/§5.1/§5.3①/§6 + 部署版 8 处同步）+ 竞品情报全量重写（Chatterfly 2026-09 内测六场景 Skill / Typeless 2026 iOS 实况）+ v7 原型落地 `prototypes/v7-spa/`（Tab A 重写：同语言成稿默认 + pill 160×36 + 「译」开关默认关；Tab K Skills 六场景；修复 K→A hostThread 残留；无头冒烟 13 Tab 0 错误）+ 协议文档全量对齐 |
 | 2026-09-26 | [`2026-09-26-07-prd-tidy-v6-prototype`](./sessions/2026-09-26-07-prd-tidy-v6-prototype.md) | T-017 ✅：v6 13 页全量原型落地 `prototypes/v6-spa/`（Tab A–M + Popover 最近译文 + 走查面板；修复 v5 遗留 runA 引用错误与孤儿 timer 竞态；无头冒烟通过）；PRD v3.1 整理修订（验收清单计数 24→22 实测、断链修复、§6 页面表落 Tab 字母）；prototypes/README 重写；协议文档全量对齐 |
 | 2026-09-26 | [`2026-09-26-06-prd-v3-push`](./sessions/2026-09-26-06-prd-v3-push.md) | T-016 ✅：PRD v3.0 拆分上线（仅 §1-9 需求；§10 商业→[ADR-002](./sessions/2026-09-26-06-prd-v3-push.md) 补充；§11 风险→`roadmap.md`）+ ADR-005~008 新增（菜单栏范式/SPA原型/Provider接口/三态并列）+ v5 SPA 原型 push 到 `prototypes/v5-spa/` + PRD 部署版 HTML push 到 `assets/`。待 v5 验收与 T-015 口径。 |

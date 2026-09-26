@@ -1,0 +1,36 @@
+name: linguaflow
+description: "译语 LinguaFlow · 全平台 BYOK AI 语音成稿输入助手（Flutter 实现，UI 对齐 prototypes/v7-spa 像素级基准）"
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # 状态管理（官方维护，轻量 ChangeNotifier 注入）
+  provider: ^6.1.2
+  # 原型内联 SVG 图标系统（ICONS 字典 1:1 平移）
+  flutter_svg: ^2.0.10+1
+  # ADR-007 Provider 适配层：HTTP/SSE 流式（纯 Dart，可单测）
+  http: ^1.2.2
+  # 持久化（PRD §9 SQLite 的 MVP 存储层，接口抽象后桌面端可换 sqlite3）
+  shared_preferences: ^2.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  # 中文 UI 字体（Noto Sans CJK SC，Web 端 CanvasKit 无系统字体，需打包）
+  fonts:
+    - family: LfSans
+      fonts:
+        - asset: assets/fonts/NotoSansCJKsc-Regular.otf
+        - asset: assets/fonts/NotoSansCJKsc-Medium.otf
+          weight: 500
+        - asset: assets/fonts/NotoSansCJKsc-Bold.otf
+          weight: 700

@@ -1,0 +1,17 @@
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+*.lock
+.packages
+
+# IDE
+.idea/
+*.iml
+.vscode/
+# macOS / 系统
+.DS_Store
+# 冒烟截图缓存
+shots_flutter/
+assets/fonts/*.otf
