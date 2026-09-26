@@ -13,10 +13,10 @@
 | 1 | 本文件 `AGENTS.md` | 规则与工作流 |
 | 2 | [`docs/CONTEXT.md`](./docs/CONTEXT.md) | **当前进度唯一真相源**：阶段、刚做完什么、下一步、阻塞点 |
 | 3 | [`docs/TASKS.md`](./docs/TASKS.md) | 任务池：领任务、看状态与验收标准 |
-| 4 | [`PRD_v2.0.md`](./PRD_v2.0.md) | 产品需求（仅需求，不含路线图/商业） |
-| 5 | [`decisions/`](./decisions/) | 4 个已决策 ADR，不可推翻 |
+| 4 | [`PRD_v3.0.md`](./PRD_v3.0.md) | 产品需求（仅需求，不含路线图/商业；v3.x 系列文件名沿用 `PRD_v3.0.md`） |
+| 5 | [`decisions/`](./decisions/) | 8 个已决策 ADR（001–008），不可推翻 |
 | 6 | [`docs/CONVENTIONS.md`](./docs/CONVENTIONS.md) | 文档格式、命名、commit、分支约定 |
-| 7 | 按任务需要 | `roadmap.md`、`competitors/`、`next_steps.md`、`docs/sessions/` |
+| 7 | 按任务需要 | `roadmap.md`、`prototypes/`、`competitors/`、`docs/competitor-research/`、`next_steps.md`、`docs/sessions/` |
 
 **不要**从 README 或 commit 历史推断当前进度——以 `docs/CONTEXT.md` 为准。
 
@@ -25,7 +25,8 @@
 ```
 yi-fanyi/
 ├── AGENTS.md              ← 本文件：Agent 入口
-├── PRD_v2.0.md            ← 产品需求（9 节，仅需求）
+├── PRD_v3.0.md            ← 产品需求最新版（v3.x 内容；文件名沿用）
+├── PRD_v2.0.md            ← v2.0 基线留档（不再更新）
 ├── roadmap.md             ← 实施路线图、工期、里程碑、项目风险
 ├── next_steps.md          ← 下一步三选项决策记录（未决策）
 ├── README.md              ← 对外公开介绍（不含内部进度）
@@ -35,11 +36,14 @@ yi-fanyi/
 │   ├── TASKS.md           ← 任务池（状态的权威列表）
 │   ├── CONVENTIONS.md     ← 文档/代码/commit 约定
 │   ├── SESSIONS.md        ← 会话日志索引
-│   └── sessions/          ← 每次会话的回执（YYYY-MM-DD-NN-主题.md）
+│   ├── sessions/          ← 每次会话的回执（YYYY-MM-DD-NN-主题.md）
+│   └── competitor-research/ ← T-014 设计调研（4 家 + 截图）
 ├── decisions/             ← ADR：001 BYOK / 002 买断 / 003 五端 / 004 Flutter
+│                            005 菜单栏范式 / 006 SPA原型 / 007 Provider接口 / 008 三态并列
 ├── competitors/           ← 竞品分析：typeless / chatterfly / bob
-├── pages-specs/           ← 页面字段级原型（选项 ③ 落地目录，待建）
-└── assets/                ← 原始 PRD docx 备份
+├── prototypes/            ← 设计原型：v6-spa（现行 13 页）/ v5-spa（留档）/ v1（作废）
+├── pages-specs/           ← 页面字段级原型（选项 ③ 落地目录，待建 T-012）
+└── assets/                ← PRD 部署版 HTML + 原始 docx 备份
 ```
 
 ## 3. 会话工作流协议
@@ -55,7 +59,7 @@ yi-fanyi/
 
 - **一次只做一个任务**，完成并自验后再领下一个
 - 遇到需要用户拍板的分歧（定价、License、选型变更）：**停下来标记 ⛔ 阻塞并写进 CONTEXT**，不要自行假设
-- 改动已决策内容（ADR-001~004）必须新增 ADR 走 supersede，不得直接改写原文件结论
+- 改动已决策内容（ADR-001~008）必须新增 ADR 走 supersede，不得直接改写原文件结论
 
 ### 结束（离开前必做，缺一不可）
 
@@ -71,8 +75,8 @@ yi-fanyi/
 
 | # | 规则 |
 |---|---|
-| R1 | `PRD_v2.0.md` **只写产品需求**；路线图进 `roadmap.md`，商业/定价进 `decisions/002`，下一步进 `next_steps.md` |
-| R2 | ADR-001~004 为已决策结论；要改必须新建 ADR 并在原文标注 superseded by |
+| R1 | `PRD_v3.0.md` **只写产品需求**；路线图进 `roadmap.md`，商业/定价进 `decisions/002`，下一步进 `next_steps.md` |
+| R2 | ADR-001~008 为已决策结论；要改必须新建 ADR 并在原文标注 superseded by |
 | R3 | 当前无产品代码；**不要**在用户确认 next_steps 选项前生成 Flutter 工程脚手架 |
 | R4 | `docs/CONTEXT.md` 是进度唯一真相源；README/INTERNAL 只放指针，不复制状态清单 |
 | R5 | Key/隐私底线：请求直连用户配置的 BaseURL，零遥测、不采集宿主应用上下文文本 |
@@ -86,12 +90,16 @@ yi-fanyi/
 | 商业模式 | **买断 ¥98–168**，不做订阅（ADR-002） |
 | 平台 | **五端**，含 Linux；先 macOS MVP（ADR-003） |
 | 技术栈 | **Flutter + 原生桥** + Provider 适配层（ADR-004） |
+| macOS 主交互 | **菜单栏 Popover 范式**，不做常驻主窗口（ADR-005） |
+| 原型形态 | **SPA 三文件零依赖**（HTML+CSS+JS），无构建无 CDN（ADR-006） |
+| Provider 接口 | 统一抽象 `TranslationProvider`（ADR-007） |
+| 录音条设计 | **三态并列展示**为强制项（ADR-008；形态 A/B/C 选择仍等用户拍板 T-015） |
 | 语音交互 | 按住 Fn 说话 → 松手成稿，1.2s 预览后悔窗口（PRD §2.1） |
 | 已知硬约束 | iOS 键盘内不能录音、不能自动切换键盘（PRD §2.6） |
 
 ## 6. 常见歧义与澄清
 
 - **"五端"** = macOS / Windows / Linux / iOS / Android；**"端侧"** = 用户设备上的本地模型
-- **流程 A–E** 的编号全局引用：A 语音翻译输入、B 悬浮窗、C 划词、D 静默替换、E 截图 OCR
+- **流程 A–E** 的编号全局引用：A 语音翻译输入、B 悬浮窗、C 划词、D 静默替换、E 截图 OCR；v6 原型扩展到 **A–M** 共 13 页（H 主窗首页 / I 模型配置 / J 快捷键 / K 偏好·术语·Skills / L 首次引导 / M 移动 App），对照表见 [`prototypes/README.md`](./prototypes/README.md)
 - **P0** = macOS MVP 必须交付；**P1** = MVP 之后补完
 - 竞品价格/功能均为二手调研，**未实测**，不要当作事实引用（见 `competitors/` 待调研项）

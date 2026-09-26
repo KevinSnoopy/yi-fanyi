@@ -1,9 +1,9 @@
 ---
-phase: "Phase 1 · 设计（v5 SPA 原型已落地，等用户验收；T-015 重画口径并行收集中）"
-stage: awaiting-t015-user-口径 + v5-原型-验收
+phase: "Phase 1 · 设计（v6 13 页全量原型已落地；T-015 重画口径并行收集中）"
+stage: awaiting-t015-user-口径 + v6-原型-验收
 last_updated: 2026-09-26
-current_focus: "T-016：PRD v3.0 + ADR-005~008 + v5 SPA 原型已 push 到 GitHub。等用户：(a) 验收 v5 SPA 原型 (b) 拍板 T-015 录音条形态/翻译开关位置/原型形态"
-next_action: "等用户验收 v5 SPA（https://tuloxi8b5t9t.space.mcode.cn）+ PRD v3.0 部署版（https://kfwrwihcuqjm.space.mcode.cn）；同时催 T-015 三选"
+current_focus: "T-017：v6 完整 13 页原型已落地 prototypes/v6-spa/ 并随 PRD v3.1 整理修订一并 push。等用户：(a) 验收 v6 原型 (b) 拍板 T-015 录音条形态/翻译开关位置/原型形态"
+next_action: "等用户验收 v6（prototypes/v6-spa/index.html 本地打开，右下角「❓ 走查」）+ PRD v3.1 部署版（assets/PRD_v3.0_deploy.html）；同时催 T-015 三选"
 blockers:
   - "T-015 用户口径未定（录音条形态 / 翻译开关位置 / 原型形态）"
   - "License 未定（README 标 TBD）"
@@ -18,13 +18,14 @@ has_code: false
 
 **Phase 1 · 设计**（无产品代码，`has_code: false`）
 
-已完成：PRD v3.0（仅需求主体；商业/风险下沉）+ 8 个 ADR（001-008）+ v5 SPA 原型（7/13 tab 实现）+ 4 家竞品视觉调研（T-014）。
-当前卡点：v6 完整 13 页原型（T-016）等 v5 验收；T-015 录音条新口径等用户拍板。
+已完成：PRD v3.1（内容修订随 `PRD_v3.0.md` 文件名沿用）+ 8 个 ADR（001-008）+ v5 SPA 原型（7/13 tab，留档）+ **v6 SPA 原型（13/13 tab 全量，T-017 ✅）** + 4 家竞品视觉调研（T-014）。
+当前卡点：v6 验收与 T-015 录音条新口径等用户拍板。
 
 ## 2. 最近一轮做了什么
 
 | 日期 | 会话 | 成果 |
 |---|---|---|
+| 2026-09-26 | [`2026-09-26-07-prd-tidy-v6-prototype`](./sessions/2026-09-26-07-prd-tidy-v6-prototype.md) | T-017 ✅：v6 13 页全量原型落地 `prototypes/v6-spa/`（Tab A–M + Popover 最近译文 + 走查面板；修复 v5 遗留 runA 引用错误与孤儿 timer 竞态；无头冒烟通过）；PRD v3.1 整理修订（验收清单计数 24→22 实测、断链修复、§6 页面表落 Tab 字母）；prototypes/README 重写；协议文档全量对齐 |
 | 2026-09-26 | [`2026-09-26-06-prd-v3-push`](./sessions/2026-09-26-06-prd-v3-push.md) | T-016 ✅：PRD v3.0 拆分上线（仅 §1-9 需求；§10 商业→[ADR-002](./sessions/2026-09-26-06-prd-v3-push.md) 补充；§11 风险→`roadmap.md`）+ ADR-005~008 新增（菜单栏范式/SPA原型/Provider接口/三态并列）+ v5 SPA 原型 push 到 `prototypes/v5-spa/` + PRD 部署版 HTML push 到 `assets/`。待 v5 验收与 T-015 口径。 |
 | 2026-09-26 | [`2026-09-26-05-t014-research`](./sessions/2026-09-26-05-t014-research.md) | T-014 ✅：竞品调研完成（4 家超出计划：Typeless / Wispr Flow / Spokenly / MacWhisper）。HTML+CSS 解析 + 9 张产品截图落地 + vision 视觉层观察全维度记录 |
 | 2026-09-26 | [`2026-09-26-04-t010-retro`](./sessions/2026-09-26-04-t010-retro.md) | T-010 复盘：5 维度教训（参照错位 / 定位权重 / 组件关系 / 触发范式 / 视觉调研缺失），状态回退 ⛔ |
@@ -36,8 +37,8 @@ has_code: false
 
 见 [`TASKS.md`](./TASKS.md)。当前无 🟡 进行中任务。下一可领取任务：
 
-- **T-016**（v6 完整 13 页原型）— 等 v5 SPA 验收后启动；可平行动作：T-012 页面字段级规格
-- **T-015**（按用户新口径重画原型）— 等用户从录音条形态 A/B/C 中选定 + 翻译开关位置 + 原型形态
+- **T-012**（13 页字段级规格）— v6 已提供 13 页交互参照，可直接开工；产出 `pages-specs/`
+- **T-015**（按用户新口径重画原型）— 等用户从录音条形态 A/B/C 中选定 + 翻译开关位置 + 原型形态；**注意：T-015 未拍板前 Tab A 维持 v6 现行形态，不得擅改**
 
 其他可平行动作（不需要用户口径）：
 - T-007 竞品实测（试用 Typeless / Bob / Chatterfly）
@@ -49,7 +50,7 @@ has_code: false
 | 阻塞项 | 影响 | 位置 |
 |---|---|---|
 | T-015 用户口径 | 录音条形态 / 翻译开关位置 / 原型形态 | docs/competitor-research/README.md 推荐方案 A/B/C |
-| v5 SPA 原型验收 | 决定是否直接进 v6 还是重画某些 tab | https://tuloxi8b5t9t.space.mcode.cn |
+| v6 原型验收 | 决定是否冻结 13 页交互进入 T-012 字段级规格 | `prototypes/v6-spa/index.html`（本地打开，右下角「❓ 走查」） |
 | License 未定 | 影响能否对外开源与 Issue/PR 开放策略 | `README.md` |
 | 竞品数据未实测 | 官网对比表、定价论证不能定稿 | `competitors/*.md` 待调研项 |
 
@@ -73,19 +74,22 @@ has_code: false
 
 - 仓库默认分支 `master`，公开仓库 `KevinSnoopy/yi-fanyi`
 - 文档全部为中文，Markdown 格式约定见 [`CONVENTIONS.md`](./CONVENTIONS.md)
-- 沙箱/容器内 `git push` 报 TLS 握手失败（`gnutls_handshake() failed`）时：先把 GitHub 真实 IP 写入 `/etc/hosts`（DNS 常被劫持到内网段）；仍失败则加 `-c http.version=HTTP/1.1` 再推，通常可绕过
+- 沙箱/容器内 `git push` 报 TLS 握手失败（`gnutls_handshake() failed`）时：先把 GitHub 真实 IP 写入 `/etc/hosts`（DNS 常被劫持到内网段）；仍失败则加 `-c http.version=HTTP/1.1` 再推，通常可绕过；若 github.com 完全被墙而 api.github.com 可通，可用 Git Data API 逐 commit 推送
 - 不要在仓库中提交任何 Key、Token、个人凭据
 - **vision 工具 1 张/次**（9 张/次必超时）
 - **delegated subagent 写文件用沙盒隔离**，交付物必须由主 agent 重新落库
 - **不要重复已有产品的截图到 README 正文**——独立存 `screenshots/` 子目录，正文引用路径
 - **PRD 写作铁律**（[ADR-005..008](../decisions/) 期间总结）：PRD 仅含产品需求（§1-9）；商业模式→对应 ADR；风险→`roadmap.md` §风险；决策记录→`decisions/`
-- **原型落地规范**：v5 SPA 在 [`prototypes/v5-spa/`](../prototypes/v5-spa/)（3 文件 105KB，Tab A-G）；PRD 部署版在 [`assets/PRD_v3.0_deploy.html`](../assets/PRD_v3.0_deploy.html)
+- **原型落地规范**：现行 v6 SPA 在 [`prototypes/v6-spa/`](../prototypes/v6-spa/)（3 文件 166KB，Tab A–M 13 页全量 + 走查面板）；v5 留档；PRD 部署版在 [`assets/PRD_v3.0_deploy.html`](../assets/PRD_v3.0_deploy.html)；13 页对照表见 [`prototypes/README.md`](../prototypes/README.md)
+- **原型 JS 约定**：演示延时一律走 `schedule()`（playTimers 集合统一清理），禁止裸 `setTimeout` 存回单个变量——v5 的孤儿 timer 竞态就是这么来的（会话 07 修复）
 
 ## 7. 给下一个 Agent 的速读路径
 
 1. 读 [`PRD_v3.0.md`](../PRD_v3.0.md)（产品需求最新版；v2.0 保留为基线）
-2. 读 [`competitor-research/README.md`](./competitor-research/README.md)（T-014 调研结论）
-3. 读 [`2026-09-26-04-t010-retro.md`](./sessions/2026-09-26-04-t010-retro.md)（T-010 复盘，避免重蹈覆辙）
-4. 读 [`2026-09-26-05-t014-research.md`](./sessions/2026-09-26-05-t014-research.md)（T-014 调研回执 + 待用户决策点）
-5. 读 [`2026-09-26-06-prd-v3-push.md`](./sessions/2026-09-26-06-prd-v3-push.md)（本次 push 回执 + v5 SPA 落地说明）
-6. 领取 T-015 时必须先拿到用户口径才能开工
+2. 读 [`prototypes/README.md`](../prototypes/README.md)（v6 13 页对照表 + 走查路径 + Design Token）
+3. 读 [`competitor-research/README.md`](./competitor-research/README.md)（T-014 调研结论）
+4. 读 [`2026-09-26-04-t010-retro.md`](./sessions/2026-09-26-04-t010-retro.md)（T-010 复盘，避免重蹈覆辙）
+5. 读 [`2026-09-26-05-t014-research.md`](./sessions/2026-09-26-05-t014-research.md)（T-014 调研回执 + 待用户决策点）
+6. 读 [`2026-09-26-06-prd-v3-push.md`](./sessions/2026-09-26-06-prd-v3-push.md)（v3.0 拆分 + v5 SPA 落地说明）
+7. 读 [`2026-09-26-07-prd-tidy-v6-prototype.md`](./sessions/2026-09-26-07-prd-tidy-v6-prototype.md)（v6 原型落地 + PRD v3.1 修订说明）
+8. 领取 T-015 时必须先拿到用户口径才能开工

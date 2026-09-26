@@ -1,7 +1,7 @@
 # TASKS · 任务池
 
 > 多 Agent 接续的调度中心。领取任务前先看依赖，完成后必须回写状态。
-> 进度快照见 [`CONTEXT.md`](./CONTEXT.md)，优先级依据 [`PRD_v2.0.md §3`](../PRD_v2.0.md) 与 [`roadmap.md`](../roadmap.md)。
+> 进度快照见 [`CONTEXT.md`](./CONTEXT.md)，优先级依据 [`PRD_v3.0.md §3`](../PRD_v3.0.md) 与 [`roadmap.md`](../roadmap.md)。
 
 ## 状态图例
 
@@ -42,7 +42,7 @@
 | T-014 | Typeless + Wispr Flow + Spokenly + MacWhisper 官网设计调研 | ✅ 2026-09-26 | — | 覆盖 4 家（超出原 Typeless+Chatterfly 计划）；HTML+CSS 提取 + 9 张截图 + vision 分析。**回执** [`2026-09-26-05-t014-research.md`](./sessions/2026-09-26-05-t014-research.md)，**主文档** [`competitor-research/README.md`](./competitor-research/README.md) | docs/competitor-research/ |
 | T-015 | 按用户新口径重做原型（语音为主 / 翻译可选） | ⬜ | T-014 + 用户口径 | 录音条形态 A/B/C、翻译开关位置、原型形态（HTML / Flutter）由用户决定 | — |
 | T-016 | PRD v3.0 + ADR-005~008 + v5 SPA 原型 push 到 GitHub | ✅ 2026-09-26 | T-014 | PRD v3.0 拆分合规 + 4 个新 ADR + v5 SPA 落 `prototypes/v5-spa/` + 部署版 HTML 落 `assets/`。**回执** [`2026-09-26-06-prd-v3-push.md`](./sessions/2026-09-26-06-prd-v3-push.md) | `PRD_v3.0.md` + `decisions/005-008/` + `prototypes/v5-spa/` |
-| T-017 | v6 完整 13 页原型（v5 基础上扩 6 个 tab） | ⬜ | T-016 + v5 用户验收 | v5 已实现 7/13 tab，v6 补主窗首页 / 模型配置 / 快捷键 / 翻译偏好+术语+Skills / 首次引导 / 托盘菜单栏 6 项 | `prototypes/v6-spa/` |
+| T-017 | v6 完整 13 页原型（v5 基础上扩 6 个 tab） | ✅ 2026-09-26 | T-016 + 用户本轮指令 | 13/13 Tab 全落地（H 主窗首页 / I 模型配置 / J 快捷键 / K 偏好+术语+Skills / L 首次引导 / M 移动 App）+ Popover 最近译文（§6 #13）+ 走查面板；Chromium 无头冒烟通过。**回执** [`2026-09-26-07-prd-tidy-v6-prototype.md`](./sessions/2026-09-26-07-prd-tidy-v6-prototype.md) | `prototypes/v6-spa/` |
 
 ## Phase 2 · macOS MVP
 
@@ -68,3 +68,4 @@
 ## 变更记录
 
 - 2026-09-26：建库，从 `roadmap.md` / `next_steps.md` / README 状态清单抽取为统一任务池
+- 2026-09-26：T-017 v6 完整 13 页原型完成（会话 07）；表头优先级引用更新为 `PRD_v3.0.md §3`（v3.1 内容修订，文件名沿用）

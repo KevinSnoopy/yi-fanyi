@@ -18,7 +18,8 @@ yi-fanyi/
 ├── AGENTS.md                ← Agent 协作入口（多会话接续，必读）
 ├── README.md                ← GitHub 公开 README（对外部访客）
 ├── INTERNAL.md              ← 本文件（产品线内部索引）
-├── PRD_v2.0.md              ← 产品需求（9 节，仅需求：流程/功能/交互/设计/异常/非功能）
+├── PRD_v3.0.md              ← 产品需求最新版（v3.1 内容修订；仅需求：流程/功能/交互/设计/页面/异常/非功能）
+├── PRD_v2.0.md              ← v2.0 基线留档（不再更新）
 ├── roadmap.md               ← 实施路线图（按优先级展开）
 ├── next_steps.md            ← 三步选项决策记录
 ├── docs/                    ← 接续中枢（多 Agent / 多会话）
@@ -26,19 +27,24 @@ yi-fanyi/
 │   ├── TASKS.md             ← 任务池（状态/依赖/验收）
 │   ├── CONVENTIONS.md       ← 文档、命名、commit、分支约定
 │   ├── SESSIONS.md          ← 会话回执索引 + 模板
-│   └── sessions/            ← 每次会话的回执文件
+│   ├── sessions/            ← 每次会话的回执文件
+│   └── competitor-research/ ← T-014 设计调研（Typeless / Wispr Flow / Spokenly / MacWhisper + 9 张截图）
 ├── competitors/             ← 竞品分析
 │   ├── typeless.md
 │   ├── chatterfly.md
 │   └── bob.md
-├── decisions/               ← 关键产品决策（ADR 风格）
+├── decisions/               ← 关键产品决策（ADR 风格，共 8 份）
 │   ├── 001-byok-not-managed.md
 │   ├── 002-buyout-not-subscription.md
 │   ├── 003-five-platform-incl-linux.md
-│   └── 004-flutter-native-bridge.md
-├── pages-specs/             ← 每个页面的字段级原型说明（Kimi 选项 ③ 落地）
-└── assets/
-    └── PRD_v2.0_source.docx ← 原始 PRD 备份
+│   ├── 004-flutter-native-bridge.md
+│   ├── 005-macos-menubar-pattern.md
+│   ├── 006-prototype-spa-app.md
+│   ├── 007-provider-interface.md
+│   └── 008-recorder-bar-three-states.md
+├── prototypes/              ← 设计原型（现行 v6-spa 13 页全量；v5-spa 留档；v1 作废）
+├── pages-specs/             ← 每个页面的字段级原型说明（待建，T-012）
+└── assets/                  ← PRD 部署版 HTML（PRD_v3.0_deploy.html）+ 原始 docx/源档备份
 ```
 
 ## 核心差异化（详见 README.md）

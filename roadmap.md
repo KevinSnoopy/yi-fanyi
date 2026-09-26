@@ -1,20 +1,21 @@
 # 译语 · 实施路线图
 
-> 基于 PRD v2.0 §3 优先级 + ADR 决策
+> 基于 PRD v3.0 §3 优先级 + ADR 决策
 > 最后更新：2026-09-26
 
 ## Phase 0 · 决策与设计（当前阶段）
 
 | 任务 | 状态 | 备注 |
 |---|---|---|
-| PRD v2.0 完整记录 | ✅ done | `PRD_v2.0.md` |
+| PRD v2.0 完整记录 | ✅ done | `PRD_v2.0.md`（v2.0 基线留档） |
 | PRD v3.0 扩展（13 页字段级 + Design Token + 验收清单） | ✅ 2026-09-26 | `PRD_v3.0.md`（仅需求；商业模式/风险下沉） |
+| PRD v3.1 整理修订（计数/断链/页面表落地） | ✅ 2026-09-26 | 内容修订随 `PRD_v3.0.md`（文件名沿用）；部署版同步 `assets/` |
 | 竞品初步调研（Typeless/Chatterfly/Bob） | 🟡 部分 | competitors/ 已建，待实测 |
 | Typeless/Wispr Flow/Spokenly/MacWhisper 4 家设计调研 (T-014) | ✅ 2026-09-26 | docs/competitor-research/ + 9 张截图 |
 | ADR 001–004 核心决策（BYOK/买断/五端/Flutter） | ✅ done | decisions/ |
 | ADR 005–008（菜单栏范式/SPA原型/Provider接口/三态并列） | ✅ 2026-09-26 | decisions/005–008 |
 | v5 SPA 原型落地 | ✅ 2026-09-26 | prototypes/v5-spa/，3 文件 105KB |
-| v6 完整 13 页原型 (T-016) | ⬜ 待开始 | 等用户对 v5 验收 |
+| v6 完整 13 页原型 (T-017) | ✅ 2026-09-26 | prototypes/v6-spa/，3 文件 166KB，13/13 Tab + Popover + 走查面板；无头冒烟通过 |
 | Provider 接口草案 | 🟡 部分 | ADR-007 已定义，T-011 待实施 |
 | 页面字段级规格 (pages-specs/) (T-012) | ⬜ 待开始 | 13 页每页一份 |
 
