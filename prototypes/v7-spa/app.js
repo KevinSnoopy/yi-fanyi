@@ -56,6 +56,7 @@
     for (const [k, v] of Object.entries(attrs || {})) {
       if (k === "class") node.className = v;
       else if (k === "style" && typeof v === "object") Object.assign(node.style, v);
+      else if (k === "innerHTML") node.innerHTML = v;
       else if (k.startsWith("on") && typeof v === "function") node.addEventListener(k.slice(2).toLowerCase(), v);
       else if (k === "dataset" && typeof v === "object") for (const [dk, dv] of Object.entries(v)) node.dataset[dk] = dv;
       else if (v !== null && v !== undefined) node.setAttribute(k, v);
@@ -73,6 +74,63 @@
     clearTimeout(showHint._t);
     if (ms) showHint._t = setTimeout(() => { els.demoHint.hidden = true; }, ms);
   };
+
+  // ============================================================
+  // v7.1 · 内联 SVG 线性图标系统（替代 emoji：统一风格 / 跨平台一致）
+  // 24 viewBox · stroke 1.7 · round cap/join · currentColor 继承
+  // ============================================================
+  const ICONS = {
+    home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/>',
+    chip: '<rect x="6" y="6" width="12" height="12" rx="2.5"/><rect x="10" y="10" width="4" height="4" rx="0.5"/><path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/>',
+    cmd: '<path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"/>',
+    sparkles: '<path d="M12 3.5 13.8 9l5.5 1.8-5.5 1.8L12 18.1l-1.8-5.5L4.7 10.8 10.2 9z"/><path d="M19 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>',
+    mic: '<rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/>',
+    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.3 2.3 3.6 5.5 3.6 9s-1.3 6.7-3.6 9c-2.3-2.3-3.6-5.5-3.6-9S9.7 5.3 12 3z"/>',
+    book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 1.9"/>',
+    shield: '<path d="M12 2.5 20 6v5c0 5-3.4 8.9-8 10.5C7.4 19.9 4 16 4 11V6z"/>',
+    shieldCheck: '<path d="M12 2.5 20 6v5c0 5-3.4 8.9-8 10.5C7.4 19.9 4 16 4 11V6z"/><path d="M8.5 11.5l2.4 2.4 4.6-4.8"/>',
+    compass: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-1.8 5.2-5.2 1.8 1.8-5.2z"/>',
+    keyboard: '<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6.5 10h.01M10.2 10h.01M13.9 10h.01M17.6 10h.01M8 14h8"/>',
+    play: '<path d="M7.5 5.4v13.2a.6.6 0 0 0 .9.5l10.5-6.6a.6.6 0 0 0 0-1L8.4 4.9a.6.6 0 0 0-.9.5z"/>',
+    rotate: '<path d="M3 3.5V9h5.5"/><path d="M3.8 9A9 9 0 1 1 3 13.5"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a2.9 2.9 0 0 1 5.6 1c0 1.9-2.8 2.3-2.8 3.8"/><path d="M12 17.2h.01"/>',
+    x: '<path d="M6 6l12 12M18 6 6 18"/>',
+    check: '<path d="M4.5 12.6l5 5L19.5 6.5"/>',
+    warn: '<path d="M12 3.5 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.5h.01"/>',
+    copy: '<rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5.5 15H4.5A2 2 0 0 1 2.5 13V4.5a2 2 0 0 1 2-2H13a2 2 0 0 1 2 2v1"/>',
+    inject: '<path d="M12 3v11.5M6.5 9.5 12 15l5.5-5.5"/><path d="M4.5 20.5h15"/>',
+    textSelect: '<path d="M12 6.5v11"/><path d="M8 6.5h8M8 17.5h8"/><path d="M5 3.5h14M5 20.5h14" opacity="0.45"/>',
+    scan: '<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M4.5 12h15"/>',
+    window: '<rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M3 9h18M6.5 6.75h.01M9 6.75h.01"/>',
+    swap: '<path d="M16.5 3 21 7.5l-4.5 4.5"/><path d="M21 7.5H7"/><path d="M7.5 21 3 16.5 7.5 12"/><path d="M3 16.5h14"/>',
+    fileText: '<path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z"/><path d="M14 2.5V8h5.5M9 13h6M9 17h6"/>',
+    barChart: '<path d="M6.5 20V11M12 20V4.5M17.5 20v-6"/><path d="M3 20h18"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3 10.5h18"/>',
+    megaphone: '<path d="M3 11v2l14 5.5v-15z"/><path d="M7.5 14.8V19a1.8 1.8 0 0 0 3.6 0v-3"/><path d="M20 9.5a3 3 0 0 1 0 5"/>',
+    mail: '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="m3.5 7.5 8.5 5.8 8.5-5.8"/>',
+    code: '<path d="M8.5 7.5 4 12l4.5 4.5M15.5 7.5 20 12l-4.5 4.5"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    download: '<path d="M12 3v11M7 9.5l5 5 5-5"/><path d="M4 20.5h16"/>',
+    settings: '<path d="M10.4 3h3.2l.4 2.4a7 7 0 0 1 1.7 1l2.3-.9 1.6 2.8-1.8 1.6a7 7 0 0 1 0 2l1.8 1.6-1.6 2.8-2.3-.9a7 7 0 0 1-1.7 1L13.6 21h-3.2l-.4-2.4a7 7 0 0 1-1.7-1l-2.3.9-1.6-2.8 1.8-1.6a7 7 0 0 1 0-2L4.4 10.3 6 7.5l2.3.9a7 7 0 0 1 1.7-1z"/><circle cx="12" cy="12" r="2.8"/>',
+    accessibility: '<circle cx="12" cy="4.8" r="1.9"/><path d="M4.5 9.3c2.5.8 5 1.2 7.5 1.2s5-.4 7.5-1.2"/><path d="M12 10.5v4.2l-3.2 6M12 14.7l3.2 6"/>',
+    mouse: '<rect x="7" y="2.8" width="10" height="18.4" rx="5"/><path d="M12 6.8v4.4"/>',
+    ban: '<circle cx="12" cy="12" r="9"/><path d="M5.7 5.7l12.6 12.6"/>',
+    refresh: '<path d="M21 12a9 9 0 1 1-2.6-6.3"/><path d="M21 3.5V9h-5.5"/>',
+    smile: '<circle cx="12" cy="12" r="9"/><path d="M8.5 14a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/>',
+    windows: '<rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1"/><rect x="13" y="13" width="7.5" height="7.5" rx="1"/>',
+    folder: '<path d="M3 7.5a2 2 0 0 1 2-2h4.2l2 2.2H19a2 2 0 0 1 2 2v8.8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    android: '<path d="M5.5 11a6.5 6.5 0 0 1 13 0z"/><path d="M7 7 5.5 4.8M17 7l1.5-2.2"/><circle cx="9.3" cy="9" r="0.3"/><circle cx="14.7" cy="9" r="0.3"/><path d="M5.5 11h13v5a2.2 2.2 0 0 1-2.2 2.2H7.7A2.2 2.2 0 0 1 5.5 16zM8.2 18.2v2.3M15.8 18.2v2.3"/>',
+  };
+
+  // icon(name, sizeClass) → <span class="ic ..."><svg>…</svg></span>
+  function icon(name, size) {
+    return h("span", {
+      class: `ic${size ? " " + size : ""}`,
+      "aria-hidden": "true",
+      innerHTML: `<svg viewBox="0 0 24 24">${ICONS[name] || ""}</svg>`,
+    });
+  }
 
   // ============================================================
   // 菜单栏时钟
@@ -150,6 +208,7 @@
   // ============================================================
   let currentTab = "A";
   let currentDemo = null;       // 当前激活的演示实例
+  let currentDemoTab = null;    // v7.2：setPageMode 用的当前 Tab（先于 currentDemo 赋值）
   let currentStateIdx = 0;      // 当前演示状态索引
   let currentStates = [];       // 当前演示的状态列表
   const playTimers = new Set(); // 全部在途延时回调（切页统一清理，防孤儿回调跨页污染）
@@ -215,14 +274,18 @@
   // ============================================================
   // H/I/J/K 为"整页模式"：内容铺满宿主窗口（隐藏底部输入框）
   const PAGE_MODE_TABS = new Set(["H", "I", "J", "K"]);
+  // v7.2：G/M/N/O 为"全场景模式"（手机/桌面整体在 overlay 中），隐藏宿主窗口避免鬼影
+  const GHOST_TABS = new Set(["G", "M", "N", "O"]);
 
   function setPageMode(on) {
     els.hostApp.classList.toggle("page-mode", !!on);
+    els.hostApp.classList.toggle("ghost", GHOST_TABS.has(currentDemoTab));
   }
 
   function renderDemo(tab) {
     clear(els.overlay);
     cancelDemo();
+    currentDemoTab = tab;
     setPageMode(PAGE_MODE_TABS.has(tab));
 
     const renderer = {
@@ -239,6 +302,8 @@
       K: renderK,
       L: renderL,
       M: renderM,
+      N: renderN,
+      O: renderO,
     }[tab];
 
     if (renderer) {
@@ -252,7 +317,10 @@
   function cancelDemo() {
     for (const id of playTimers) clearTimeout(id);
     playTimers.clear();
-    window.__runState = null;
+    // v7.1 修复：不再置空 window.__runState。
+    // 原实现导致 renderX() 末尾初始化态（内含 cancelDemo）清掉刚赋值的
+    // __runState，「演示控制」单切状态按钮全程失效；其生命周期由
+    // renderDemo → renderer() 重新赋值管理，清定时器职责与它无关。
   }
 
   // ============================================================
@@ -265,7 +333,10 @@
     els.hostInput.value = "";
     els.hostInput.disabled = false;
     els.hostInput.placeholder = "按住 Fn 说话，松手成稿写进这里…";
-    els.hostThread.innerHTML = ""; // 清其他 Tab 残留的 page-view（如 K 设置页）
+    // v7.2：补 2 条上下文消息，让「已落框」回复有对话语境
+    els.hostThread.innerHTML = `
+      <div class="msg msg-them"><div class="msg-meta">李总 · 14:28</div><div class="msg-bubble">小陈，报价单我让财务核过了，没问题。</div></div>
+      <div class="msg msg-them"><div class="msg-meta">李总 · 14:29</div><div class="msg-bubble">确认一下，这周能把合同定下来吗？</div></div>`;
 
     let transOn = false;   // 翻译开关（默认关：成稿为主，Typeless Dictate 范式）
 
@@ -414,9 +485,9 @@
 
       const foot = h("div", { class: "mini-foot" },
         h("div", { class: "mini-actions" },
-          h("button", { type: "button", title: "复制" }, "📋 复制"),
-          h("button", { type: "button", title: "替换输入框" }, "⤓ 注入"),
-          h("button", { type: "button", class: "primary", title: "关闭" }, "✓ 完成"),
+          h("button", { type: "button", title: "复制" }, icon("copy", "sm"), "复制"),
+          h("button", { type: "button", title: "替换输入框" }, icon("inject", "sm"), "注入"),
+          h("button", { type: "button", class: "primary", title: "关闭" }, icon("check", "sm"), "完成"),
         ),
         h("span", { style: { color: "var(--text-3)" } }, stateIdx === 3 ? "178ms · 0 ¥" : "…"),
       );
@@ -485,8 +556,8 @@
           h("div", { class: "tp-row tp-source" }, word),
           h("div", { class: "tp-row tp-target" }, stateIdx === 2 ? "忘记取消订" : translation),
           h("div", { class: "tp-foot" },
-            h("button", { type: "button" }, "📋 复制"),
-            h("button", { type: "button", class: "primary" }, "⤓ 替换"),
+            h("button", { type: "button" }, icon("copy", "sm"), "复制"),
+            h("button", { type: "button", class: "primary" }, icon("swap", "sm"), "替换"),
           ),
         );
         els.overlay.appendChild(pop);
@@ -558,7 +629,7 @@
         const bar = h("div", { class: "silent-bar bar-enter" },
           h("span", { class: "dot ok", "aria-hidden": "true" }),
           h("span", { class: "progress-text" }, "✓ 已替换（", h("strong", null, "1.2s"), " 内静默写入）"),
-          h("button", { type: "button" }, "↺ 撤回"),
+          h("button", { type: "button" }, icon("rotate", "sm"), "撤回"),
         );
         els.overlay.appendChild(bar);
         schedule(() => {
@@ -627,20 +698,20 @@
           h("div", { class: "ocr-col" },
             h("div", { class: "ocr-col-label" },
               h("span", null, "原文"),
-              h("button", { type: "button" }, "📋 复制"),
+              h("button", { type: "button" }, icon("copy", "sm"), "复制"),
             ),
             h("div", { class: "ocr-col-body ocr-source" }, source),
           ),
           h("div", { class: "ocr-col" },
             h("div", { class: "ocr-col-label" },
               h("span", null, "译文 · 中文"),
-              h("button", { type: "button" }, "📋 复制"),
+              h("button", { type: "button" }, icon("copy", "sm"), "复制"),
             ),
             h("div", { class: "ocr-col-body ocr-target" }, target),
           ),
           h("div", { style: { display: "flex", gap: "6px", marginTop: "8px" } },
-            h("button", { type: "button", class: "settings-btn ghost full" }, "⤓ 注入"),
-            h("button", { type: "button", class: "settings-btn primary full" }, "✓ 完成"),
+            h("button", { type: "button", class: "settings-btn ghost full" }, icon("inject", "sm"), " 注入"),
+            h("button", { type: "button", class: "settings-btn primary full" }, icon("check", "sm"), " 完成"),
           ),
         );
         els.overlay.appendChild(result);
@@ -692,7 +763,7 @@
     els.hostInput.value = "如果你 1 分钟没动电脑，主窗口会被锁屏。";
     els.hostThread.innerHTML = `
       <div style="padding:32px 24px;text-align:center">
-        <div style="font-size:48px;margin-bottom:12px">🛡</div>
+        <div style="margin:0 auto 12px;width:56px;height:56px;border-radius:16px;background:var(--brand-grad);color:#fff;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 20 6v5c0 5-3.4 8.9-8 10.5C7.4 19.9 4 16 4 11V6z"/><path d="M8.5 11.5l2.4 2.4 4.6-4.8"/></svg></div>
         <div style="font-size:16px;font-weight:600;margin-bottom:8px">隐私锁已激活</div>
         <div style="color:var(--text-2);font-size:13px;margin-bottom:16px">所有调用本地化 · 离开超过 1 分钟锁定</div>
         <div style="display:flex;gap:8px;justify-content:center">
@@ -712,7 +783,7 @@
 
       if (stateIdx === 0) {
         const banner = h("div", { class: "privacy-banner bar-enter" },
-          h("span", { class: "pb-icon", "aria-hidden": "true" }, "✓"),
+          h("span", { class: "pb-icon", "aria-hidden": "true" }, icon("shieldCheck", "sm")),
           h("div", null,
             h("div", { class: "pb-title" }, "隐私锁 · 已解锁"),
             h("div", { class: "pb-sub" }, "FaceID 已通过 · 本地无密钥缓存"),
@@ -722,7 +793,7 @@
         els.overlay.appendChild(banner);
       } else if (stateIdx === 1) {
         const banner = h("div", { class: "privacy-banner bar-enter warn" },
-          h("span", { class: "pb-icon", "aria-hidden": "true" }, "⏱"),
+          h("span", { class: "pb-icon", "aria-hidden": "true" }, icon("clock", "sm")),
           h("div", null,
             h("div", { class: "pb-title" }, "检测到离开设备"),
             h("div", { class: "pb-sub" }, "Mac 合盖 / 屏幕保护程序已触发 · 倒计时 60s"),
@@ -754,7 +825,7 @@
       } else if (stateIdx === 3) {
         // 解锁中
         const banner = h("div", { class: "privacy-banner bar-enter success" },
-          h("span", { class: "pb-icon", "aria-hidden": "true" }, "✓"),
+          h("span", { class: "pb-icon", "aria-hidden": "true" }, icon("check", "sm")),
           h("div", null,
             h("div", { class: "pb-title" }, "FaceID 验证通过"),
             h("div", { class: "pb-sub" }, "解锁耗时 320ms · 未发送任何遥测"),
@@ -819,13 +890,12 @@
         h("div", { class: "phone-notch", "aria-hidden": "true" }),
         h("div", { class: "phone-status" }, "9:41"),
         h("div", { class: "phone-host" },
-          // 复用现有 thread + input
-          // 直接 mount：把 hostThread / hostInput 显示
-          h("div", { class: "phone-thread" }, els.hostThread.innerHTML),
+          // v7.2 修复：用 innerHTML 传参（字符串 child 会被 h() 当文本节点，导致源码显示）
+          h("div", { class: "phone-thread", innerHTML: els.hostThread.innerHTML }),
           h("div", { class: "phone-input-row" },
-            h("button", { class: "phone-mic", type: "button", "aria-label": "语音" }, "🎙"),
+            h("button", { class: "phone-mic", type: "button", "aria-label": "语音" }, icon("mic")),
             h("input", { type: "text", class: "phone-input", placeholder: "消息", value: stateIdx >= 2 ? original : "" }),
-            h("button", { class: "phone-emoji", type: "button", "aria-label": "表情" }, "😊"),
+            h("button", { class: "phone-emoji", type: "button", "aria-label": "表情" }, icon("smile")),
           ),
         ),
       );
@@ -839,7 +909,7 @@
           h("button", { type: "button", class: "lang-chip", dataset: { active: stateIdx >= 1 } }, "中"),
           h("button", { type: "button", class: "lang-chip" }, "EN"),
           h("button", { type: "button", class: "lang-arrow", "aria-hidden": "true" }, "⇄"),
-          h("button", { type: "button", class: "lang-chip" }, "🇯🇵"),
+          h("button", { type: "button", class: "lang-chip" }, "日"),
         ),
         h("div", { class: "phone-toolbar-mid" },
           stateIdx === 2 ? h("span", { class: "phone-typing" }, "正在输入：", h("strong", null, original)) : null,
@@ -847,9 +917,9 @@
           stateIdx === 4 ? h("span", { class: "phone-typing ok" }, "✓ 候选就绪") : null,
         ),
         h("div", { class: "phone-toolbar-right" },
-          h("button", { type: "button", title: "语种表" }, "🌐"),
-          h("button", { type: "button", title: "术语表" }, "📖"),
-          h("button", { type: "button", title: "历史" }, "🕒"),
+          h("button", { type: "button", title: "语种表" }, icon("globe")),
+          h("button", { type: "button", title: "术语表" }, icon("book")),
+          h("button", { type: "button", title: "历史" }, icon("clock")),
         ),
       );
       keyboard.appendChild(toolbar);
@@ -916,7 +986,7 @@
 
     window.__runState = gAt;
     runG();
-    showHint("iOS / Android 系统键盘扩展 · 中英日瞬切", 4000);
+    showHint("iOS 系统键盘扩展 · 中英日瞬切（Android 键盘见 Tab O）", 4000);
   }
 
   // ============================================================
@@ -933,15 +1003,15 @@
 
     return h("div", { class: "mw-sidebar" },
       h("div", { class: "mw-side-title" }, h("span", { class: "mw-side-logo" }, "译"), "译语"),
-      link("H", "⌂", "首页 · 历史与用量"),
-      link("I", "⌬", "模型配置"),
-      link("J", "⌘", "快捷键"),
-      link("K", "✦", "偏好 / 术语 / Skills"),
+      link("H", icon("home"), "首页 · 历史与用量"),
+      link("I", icon("chip"), "模型配置"),
+      link("J", icon("cmd"), "快捷键"),
+      link("K", icon("sparkles"), "偏好 / 术语 / Skills"),
       h("div", { class: "mw-side-sep" }),
-      link("F", "🛡", "隐私安全"),
-      link("L", "🧭", "首次引导"),
+      link("F", icon("shield"), "隐私安全"),
+      link("L", icon("compass"), "首次引导"),
       h("div", { class: "mw-side-sep" }),
-      h("button", { class: "mw-side-link", type: "button", onclick: () => switchTab("A") }, h("span", { class: "lk-ico" }, "🎙"), "回到语音输入"),
+      h("button", { class: "mw-side-link", type: "button", onclick: () => switchTab("A") }, h("span", { class: "lk-ico" }, icon("mic")), "回到语音输入"),
     );
   }
 
@@ -976,7 +1046,7 @@
           h("div", { class: "mw-h1" }, "首页"),
           h("div", { class: "mw-sub" }, "历史记录 · 用量统计（本地保存，不上传）"),
           h("div", { class: "empty-state" },
-            h("div", { class: "empty-icon" }, "🎙"),
+            h("div", { class: "empty-icon" }, icon("mic")),
             h("div", { class: "empty-title" }, "还没有任何记录"),
             h("div", { class: "empty-sub" }, "按住 Fn 说一句话，或用 ⌥Space 悬浮窗输入；历史与用量统计会出现在这里。绝不白屏：未配置模型时会先引导本地模型试用。"),
             h("button", { class: "settings-btn primary", type: "button", style: { width: "auto", padding: "8px 18px" }, onclick: () => switchTab("L") }, "先去完成首次引导"),
@@ -1054,14 +1124,14 @@
       { name: "DeepSeek", logo: "D", bg: "#4D6BFE", tag: "deepseek-chat" },
       { name: "通义", logo: "通", bg: "#615CED", tag: "qwen 系" },
       { name: "火山方舟", logo: "火", bg: "#0D5EF4", tag: "doubao 系" },
-      { name: "Ollama", logo: "⌬", bg: "#1A1A1A", tag: "本地 · 离线" },
-      { name: "自定义", logo: "⚙", bg: "#86909C", tag: "OpenAI 兼容" },
+      { name: "Ollama", logo: "O", bg: "#1A1A1A", tag: "本地 · 离线" },
+      { name: "自定义", logo: "＋", bg: "#86909C", tag: "OpenAI 兼容" },
     ];
 
     const PROVIDERS = [
       { name: "OpenAI", model: "gpt-4o-mini · 342ms", logo: "O", bg: "#10A37F", live: true },
       { name: "Claude", model: "claude-sonnet-4 · 512ms", logo: "C", bg: "#D97757", live: true },
-      { name: "Ollama（本地）", model: "qwen2.5:7b · 0ms", logo: "⌬", bg: "#1A1A1A", live: true },
+      { name: "Ollama（本地）", model: "qwen2.5:7b · 0ms", logo: "O", bg: "#1A1A1A", live: true },
     ];
 
     function iAt(stateIdx) {
@@ -1077,11 +1147,11 @@
         // 空态：绝不白屏 → 本地模型一键体验
         content.append(
           h("div", { class: "empty-state" },
-            h("div", { class: "empty-icon" }, "⌬"),
+            h("div", { class: "empty-icon" }, icon("chip")),
             h("div", { class: "empty-title" }, "还没有配置任何模型"),
             h("div", { class: "empty-sub" }, "添加一个 Provider（OpenAI 兼容 / Claude / Gemini / Ollama…），或先体验本地模型——无需任何 Key。"),
             h("div", { style: { display: "flex", gap: "8px" } },
-              h("button", { class: "settings-btn primary", type: "button", style: { width: "auto", padding: "8px 18px" }, onclick: () => iAt(2) }, "＋ 添加 Provider"),
+              h("button", { class: "settings-btn primary", type: "button", style: { width: "auto", padding: "8px 18px" }, onclick: () => iAt(2) }, icon("plus", "sm"), " 添加 Provider"),
               h("button", { class: "settings-btn ghost", type: "button", style: { width: "auto", padding: "8px 18px" }, onclick: () => switchTab("L") }, "先用本地模型试用"),
             ),
           ),
@@ -1091,7 +1161,7 @@
         content.append(
           h("div", { class: "mw-h2" }, "当前默认"),
           h("div", { class: "current-model" },
-            h("div", { class: "cm-logo" }, "⌬"),
+            h("div", { class: "cm-logo" }, "O"),
             h("div", { class: "cm-info" },
               h("div", { class: "cm-name" }, "Ollama · qwen2.5:7b"),
               h("div", { class: "cm-meta" }, "本地 · 离线 · 零成本"),
@@ -1111,7 +1181,7 @@
               )
             ),
           ),
-          h("button", { class: "settings-btn ghost full", type: "button", onclick: () => iAt(2) }, "＋ 添加 Provider"),
+          h("button", { class: "settings-btn ghost full", type: "button", onclick: () => iAt(2) }, icon("plus", "sm"), " 添加 Provider"),
         );
       }
 
@@ -1150,7 +1220,7 @@
                   h("option", null, "gpt-4o"),
                   h("option", null, "o3-mini"),
                 ),
-                h("button", { class: "settings-btn ghost", type: "button", style: { width: "auto", padding: "8px 12px", marginTop: "0" } }, "⟳ 拉取模型列表"),
+                h("button", { class: "settings-btn ghost", type: "button", style: { width: "auto", padding: "8px 12px", marginTop: "0" } }, icon("refresh", "sm"), " 拉取模型列表"),
               ),
             ),
             stateIdx === 2
@@ -1170,7 +1240,7 @@
                 h("span", { class: "bar-spinner", style: { width: "12px", height: "12px" } }), "请求中… https://api.openai.com/v1/models"),
             ),
             h("div", { class: "inline-error" },
-              h("span", { class: "ie-icon" }, "✕"),
+              h("span", { class: "ie-icon" }, icon("x", "sm")),
               h("div", { class: "ie-body" },
                 h("div", { class: "ie-title" }, "测试失败 · 401 Invalid API Key"),
                 h("div", null, "模型方返回：Incorrect API key provided. 请检查 Key 是否复制完整、账号是否欠费。"),
@@ -1240,7 +1310,7 @@
       if (stateIdx === 1) {
         content.append(
           h("div", { class: "inline-error" },
-            h("span", { class: "ie-icon" }, "⚠"),
+            h("span", { class: "ie-icon" }, icon("warn", "sm")),
             h("div", { class: "ie-body" },
               h("div", { class: "ie-title" }, "检测到 2 处热键冲突"),
               h("div", null, "「截图 OCR」与 macOS 系统截屏冲突；Windows 下 Ctrl+Alt+A 与微信截图冲突。冲突热键不会全局生效，请在下方重绑。"),
@@ -1259,7 +1329,7 @@
               h("span", { style: { fontSize: "10.5px", color: "var(--text-3)", width: "92px" } }, `Win/Linux: ${k.win}`),
               h("button", { class: "hk-key", type: "button", title: "点击重新录制", onclick: () => jAt(2) }, k.mac),
               h("span", { class: `hk-status ${showConflict ? "err" : "ok"}` },
-                showConflict ? `⚠ 与 ${k.with} 冲突` : "可用"),
+                showConflict ? `与 ${k.with} 冲突` : "可用"),
             );
           }),
         ),
@@ -1374,8 +1444,8 @@
           ),
           termRows("通用"),
           h("div", { style: { display: "flex", gap: "8px", marginTop: "12px" } },
-            h("button", { class: "settings-btn primary", type: "button", style: { width: "auto", padding: "8px 16px", marginTop: "0" } }, "＋ 添加词条"),
-            h("button", { class: "settings-btn ghost", type: "button", style: { width: "auto", padding: "8px 16px", marginTop: "0" } }, "📤 CSV 导入"),
+            h("button", { class: "settings-btn primary", type: "button", style: { width: "auto", padding: "8px 16px", marginTop: "0" } }, icon("plus", "sm"), " 添加词条"),
+            h("button", { class: "settings-btn ghost", type: "button", style: { width: "auto", padding: "8px 16px", marginTop: "0" } }, icon("download", "sm"), " CSV 导入"),
             h("button", { class: "settings-btn ghost", type: "button", style: { width: "auto", padding: "8px 16px", marginTop: "0" } }, "应用范围：全部场景 ▾"),
           ),
         );
@@ -1384,43 +1454,43 @@
           h("div", { class: "mw-sub" }, "Skill 场景模板（P1）：对齐 Chatterfly 六场景，把「成稿风格 + 术语表 + 目标格式」打包，可自定义分享。"),
           h("div", { class: "skill-grid" },
             h("button", { class: "skill-card", type: "button" },
-              h("div", { class: "sk-ico" }, "📝"),
+              h("div", { class: "sk-ico" }, icon("fileText")),
               h("div", { class: "sk-name" }, "会议纪要"),
               h("div", { class: "sk-desc" }, "口头语压缩为条目式纪要，自动提炼 action items 与负责人。"),
               h("div", { class: "sk-meta" }, "内置 · 适配流程 A"),
             ),
             h("button", { class: "skill-card", type: "button" },
-              h("div", { class: "sk-ico" }, "📊"),
+              h("div", { class: "sk-ico" }, icon("barChart")),
               h("div", { class: "sk-name" }, "工作汇报"),
               h("div", { class: "sk-desc" }, "碎碎念整理成「进展 / 风险 / 下一步」三段式周报口吻。"),
               h("div", { class: "sk-meta" }, "内置 · 适配流程 A"),
             ),
             h("button", { class: "skill-card", type: "button" },
-              h("div", { class: "sk-ico" }, "📅"),
+              h("div", { class: "sk-ico" }, icon("calendar")),
               h("div", { class: "sk-name" }, "项目进度"),
               h("div", { class: "sk-desc" }, "按里程碑归组更新事项，标注阻塞点与责任人。"),
               h("div", { class: "sk-meta" }, "内置 · 适配流程 A"),
             ),
             h("button", { class: "skill-card", type: "button" },
-              h("div", { class: "sk-ico" }, "📣"),
+              h("div", { class: "sk-ico" }, icon("megaphone")),
               h("div", { class: "sk-name" }, "营销文案"),
               h("div", { class: "sk-desc" }, "吸睛开头 + 卖点结构化，适配跨境电商 Listing 场景。"),
               h("div", { class: "sk-meta" }, "内置 · 适配流程 B"),
             ),
             h("button", { class: "skill-card", type: "button" },
-              h("div", { class: "sk-ico" }, "✉️"),
+              h("div", { class: "sk-ico" }, icon("mail")),
               h("div", { class: "sk-name" }, "邮件润色"),
               h("div", { class: "sk-desc" }, "正式书面语气，带称呼与落款模板，润色+翻译一次完成。"),
               h("div", { class: "sk-meta" }, "内置 · 适配流程 A/B"),
             ),
             h("button", { class: "skill-card", type: "button" },
-              h("div", { class: "sk-ico" }, "💻"),
+              h("div", { class: "sk-ico" }, icon("code")),
               h("div", { class: "sk-name" }, "Vibe-Coding 提示词"),
               h("div", { class: "sk-desc" }, "把口述需求转成结构化 Prompt，含约束条件与输出格式。"),
               h("div", { class: "sk-meta" }, "内置 · 适配流程 A"),
             ),
             h("button", { class: "skill-card custom", type: "button", style: { gridColumn: "1 / -1" } },
-              h("div", { class: "sk-ico" }, "＋"),
+              h("div", { class: "sk-ico" }, icon("plus")),
               h("div", { class: "sk-name" }, "新建 Skill"),
               h("div", { class: "sk-meta" }, "选择风格 / 术语表 / 输出格式"),
             ),
@@ -1458,7 +1528,7 @@
       { name: "Gemini", logo: "G", bg: "#4285F4" },
       { name: "DeepSeek", logo: "D", bg: "#4D6BFE" },
       { name: "通义", logo: "通", bg: "#615CED" },
-      { name: "Ollama 本地", logo: "⌬", bg: "#1A1A1A" },
+      { name: "Ollama 本地", logo: "O", bg: "#1A1A1A" },
     ];
 
     function dots(active) {
@@ -1546,7 +1616,7 @@
           h("div", { class: "wiz-title" }, "授予两个系统权限"),
           h("div", { class: "wiz-sub" }, "全局热键需要以下权限；只用于监听热键与读取选中文本，不做任何采集（§8 隐私）。"),
           h("div", { class: "perm-card" },
-            h("div", { class: "perm-ico" }, "♿"),
+            h("div", { class: "perm-ico" }, icon("accessibility")),
             h("div", { class: "perm-body" },
               h("div", { class: "perm-name" }, "辅助功能", h("span", { class: "perm-status warn" }, "· 待授权")),
               h("div", { class: "perm-desc" }, "监听全局热键（Fn / ⌥ 组合）并向其他应用注入文本"),
@@ -1554,7 +1624,7 @@
             h("button", { class: "settings-btn primary", type: "button", style: { width: "auto", padding: "7px 12px", marginTop: "0" } }, "打开设置"),
           ),
           h("div", { class: "perm-card" },
-            h("div", { class: "perm-ico" }, "🖱"),
+            h("div", { class: "perm-ico" }, icon("mouse")),
             h("div", { class: "perm-body" },
               h("div", { class: "perm-name" }, "输入监控", h("span", { class: "perm-status warn" }, "· 待授权")),
               h("div", { class: "perm-desc" }, "读取划词选区，实现流程 C / D"),
@@ -1570,7 +1640,7 @@
         card = h("div", { class: "wiz-card" },
           dots(3),
           h("div", { style: { textAlign: "center" } },
-            h("div", { class: "about-logo", style: { margin: "0 auto 10px" } }, "✓"),
+            h("div", { class: "about-logo", style: { margin: "0 auto 10px", display: "flex", alignItems: "center", justifyContent: "center" } }, icon("check", "xl")),
             h("div", { class: "wiz-title" }, "一切就绪"),
             h("div", { class: "wiz-sub" }, "当前默认：Ollama · qwen2.5:7b（本地 · 离线 · 零成本）。随时可在「模型配置」切换或新增 Provider。"),
             h("div", { style: { display: "flex", gap: "8px", justifyContent: "center", margin: "14px 0 4px" } },
@@ -1622,13 +1692,13 @@
         h("div", { class: "pa-card" },
           h("div", { class: "pa-card-title" }, "当前配置"),
           h("div", { class: "pa-row" },
-            h("span", { class: "pr-ico" }, "⌬"),
+            h("span", { class: "pr-ico" }, icon("chip")),
             h("span", { class: "pa-name" }, "默认模型"),
             h("span", { class: "pa-meta" }, "Ollama · qwen2.5:7b"),
             h("span", { class: "pa-chevron" }, "›"),
           ),
           h("div", { class: "pa-row" },
-            h("span", { class: "pr-ico" }, "🌐"),
+            h("span", { class: "pr-ico" }, icon("globe")),
             h("span", { class: "pa-name" }, "语言方向"),
             h("span", { class: "pa-meta" }, "中文 → English"),
             h("span", { class: "pa-chevron" }, "›"),
@@ -1637,13 +1707,13 @@
         h("div", { class: "pa-card" },
           h("div", { class: "pa-card-title" }, "键盘"),
           h("div", { class: "pa-row" },
-            h("span", { class: "pr-ico" }, "⌨"),
+            h("span", { class: "pr-ico" }, icon("keyboard")),
             h("span", { class: "pa-name" }, "引导开启译语键盘"),
             h("span", { class: "pa-meta" }, "未启用"),
             h("span", { class: "pa-chevron" }, "›"),
           ),
           h("div", { class: "pa-row" },
-            h("span", { class: "pr-ico" }, "📖"),
+            h("span", { class: "pr-ico" }, icon("book")),
             h("span", { class: "pa-name" }, "键盘术语表"),
             h("span", { class: "pa-meta" }, "通用 · 8 条"),
             h("span", { class: "pa-chevron" }, "›"),
@@ -1652,13 +1722,13 @@
         h("div", { class: "pa-card" },
           h("div", { class: "pa-card-title" }, "隐私与安全"),
           h("div", { class: "pa-row" },
-            h("span", { class: "pr-ico" }, "🛡"),
+            h("span", { class: "pr-ico" }, icon("shield")),
             h("span", { class: "pa-name" }, "隐私锁"),
             h("span", { class: "pa-meta" }, "FaceID"),
             h("label", { class: "switch" }, h("input", { type: "checkbox", checked: "" }), h("span", { class: "sw-track" }), h("span", { class: "sw-thumb" })),
           ),
           h("div", { class: "pa-row" },
-            h("span", { class: "pr-ico" }, "⛔"),
+            h("span", { class: "pr-ico" }, icon("ban")),
             h("span", { class: "pa-name" }, "零遥测"),
             h("span", { class: "pa-meta" }, "始终开启，不可关闭"),
           ),
@@ -1691,7 +1761,7 @@
         ));
       } else if (stateIdx === 2) {
         const banner = h("div", { class: "privacy-banner success bar-enter", style: { position: "absolute", top: "70px", left: "50%", transform: "translateX(-50%)", minWidth: "0", padding: "10px 14px" } },
-          h("span", { class: "pb-icon" }, "✓"),
+          h("span", { class: "pb-icon" }, icon("check", "sm")),
           h("div", null,
             h("div", { class: "pb-title" }, "FaceID 验证通过"),
             h("div", { class: "pb-sub" }, "0.3s · 无遥测"),
@@ -1712,6 +1782,362 @@
     window.__runState = mAt;
     mAt(0);
     showHint("移动 App 主页：键盘引导（iOS 不能自动切换）+ 隐私锁（B.4）", 4200);
+  }
+
+  // ============================================================
+  // v7.2 · Tab N · Windows 端（Win11 · Fluent Design）
+  // 状态：录音中 → 成稿中 → 预览 → 已落框（+ Win 通知 Toast）→ 托盘快速面板
+  // 设计语言：Mica 窗口 8px 圆角 · Segoe UI · Acrylic 面板 · 居中任务栏
+  // ============================================================
+  function renderN() {
+    els.hostTitle.textContent = "Windows 11 · 译语";
+    els.hostInput.value = "";
+    els.hostInput.disabled = true;
+    els.hostThread.innerHTML = "";
+
+    const STATES = ["录音中", "成稿中", "预览", "已落框", "托盘面板"];
+    setDemoControls(STATES, runN, () => nAt(0));
+
+    const draftZh = "那个报价我确认没问题，下周三之前可以签合同。";
+    const finalZh = "那个报价我确认没问题，下周三之前可以把合同签了。";
+
+    // Win11 标题栏右侧按钮（− □ ×，关闭键 hover 红）
+    function winCaps() {
+      return h("div", { class: "win-caps" },
+        h("span", { class: "win-cap", "aria-hidden": "true", innerHTML: '<svg viewBox="0 0 10 10" width="10" height="10"><path d="M1 5h8" stroke="currentColor" stroke-width="1"/></svg>' }),
+        h("span", { class: "win-cap", "aria-hidden": "true", innerHTML: '<svg viewBox="0 0 10 10" width="10" height="10"><rect x="1.5" y="1.5" width="7" height="7" fill="none" stroke="currentColor"/></svg>' }),
+        h("span", { class: "win-cap close", "aria-hidden": "true", innerHTML: '<svg viewBox="0 0 10 10" width="10" height="10"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1"/></svg>' }),
+      );
+    }
+
+    // Win 语音成稿条（复用 pill 组件 + Fluent 皮肤）
+    function winPill(stateIdx) {
+      const bar = h("div", { class: "bar bar-enter bar-pill win-skin", dataset: { state: stateIdx } });
+      if (stateIdx === 0) {
+        bar.append(
+          h("span", { class: "mic-dot", "aria-hidden": "true" }),
+          h("span", { class: "bar-wave", "aria-hidden": "true" }, ...Array.from({ length: 10 }, () => h("span"))),
+          h("span", { class: "bar-text", dataset: { lang: "zh" } }, "正在聆听", h("span", { class: "chars" }, " 0:02")),
+          h("span", { class: "win-hk" }, "Win+H"),
+        );
+      } else if (stateIdx === 1) {
+        bar.append(
+          h("span", { class: "bar-spinner", "aria-hidden": "true" }),
+          h("span", { class: "bar-text" }, "成稿中…", h("span", { class: "chars" }, " 已输出 8 字")),
+          h("span", { class: "bar-action" }, "Esc 取消"),
+        );
+      } else if (stateIdx === 2) {
+        bar.classList.add("bar-preview");
+        bar.append(
+          h("span", { class: "bar-text text-fade-in" }, draftZh, h("span", { class: "bar-cursor" })),
+          h("span", { class: "bar-action" }, "✓ 1.2s"),
+          h("span", { class: "bar-action" }, "✗ 重说"),
+        );
+      } else if (stateIdx === 3) {
+        bar.append(
+          h("span", { class: "mic-dot", style: { background: "var(--success)", boxShadow: "0 0 0 4px rgba(43,164,113,0.2)" }, "aria-hidden": "true" }),
+          h("span", { class: "bar-text" }, "✓ 已写入 · 成稿"),
+        );
+        schedule(() => {
+          bar.classList.add("bar-exit");
+          schedule(() => bar.remove(), 250);
+        }, 1500);
+      }
+      return bar;
+    }
+
+    // 任务栏（居中图标 + 右侧托盘）
+    function winTaskbar() {
+      const tbIcon = (label, inner, active) =>
+        h("button", { type: "button", class: `win-tb-icon ${active ? "active" : ""}`, "aria-label": label, title: label, innerHTML: inner });
+      return h("div", { class: "win-taskbar" },
+        h("div", { class: "win-tb-center" },
+          tbIcon("开始", icon("windows", "lg").innerHTML),
+          tbIcon("搜索", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>'),
+          tbIcon("文件资源管理器", icon("folder", "lg").innerHTML),
+          tbIcon("浏览器", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 3a13 13 0 0 1 0 18M12 3a13 13 0 0 0 0 18M3.5 9.5h17M3.5 14.5h17" opacity="0.7"/></svg>'),
+          tbIcon("译语", `<span class="win-tb-applogo">译</span>`, true),
+        ),
+        h("div", { class: "win-tb-tray" },
+          h("span", { class: "win-tray-item win-ime" }, "中"),
+          h("span", { class: "win-tray-item", "aria-hidden": "true", innerHTML: '<svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><path d="M8 2 4.5 5.5H2v5h2.5L8 14zM10.5 5.5a3.6 3.6 0 0 1 0 5M12.5 3.5a6.4 6.4 0 0 1 0 9" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' }),
+          h("span", { class: "win-tray-item", "aria-hidden": "true", innerHTML: '<svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><path d="M8 13.5 2 7.2a8.5 8.5 0 0 1 12 0z" opacity="0.9"/></svg>' }),
+          h("span", { class: "win-tray-clock" }, h("span", null, "20:10"), h("span", null, "2026/09/26")),
+        ),
+      );
+    }
+
+    // 托盘上方 Acrylic 快速面板（态 4）
+    function winQuickPanel() {
+      const row = (label, val) =>
+        h("div", { class: "wqp-row" }, h("span", null, label), h("strong", null, val));
+      const toggle = (label, on) =>
+        h("div", { class: "wqp-row toggle" },
+          h("span", null, label),
+          h("label", { class: "mini-switch" },
+            h("input", { type: "checkbox", ...(on ? { checked: "" } : {}), "aria-label": label }),
+            h("span", { class: "ms-track" }, h("span", { class: "ms-thumb" })),
+          ),
+        );
+      return h("div", { class: "win-quickpanel rise-in" },
+        h("div", { class: "wqp-head" },
+          h("span", { class: "wqp-logo" }, "译"),
+          h("div", null,
+            h("div", { class: "wqp-name" }, "译语"),
+            h("div", { class: "wqp-sub" }, "本地优先 · 已连接"),
+          ),
+          h("span", { class: "popover-dot ok", "aria-label": "在线" }),
+        ),
+        row("模型", "Ollama · qwen2.5:7b"),
+        row("语言方向", "中文 → English"),
+        row("按住说话", "Win+H"),
+        h("div", { class: "wqp-sep", role: "separator" }),
+        toggle("开机自启", true),
+        toggle("隐私锁", false),
+        h("button", { type: "button", class: "wqp-open" }, icon("window", "sm"), " 打开主窗口"),
+      );
+    }
+
+    // Win 通知 Toast（态 3，右下角）
+    function winToast() {
+      return h("div", { class: "win-toast rise-in" },
+        h("span", { class: "wt-ico" }, "译"),
+        h("div", { class: "wt-body" },
+          h("div", { class: "wt-app" }, "译语"),
+          h("div", { class: "wt-title" }, "已写入成稿"),
+          h("div", { class: "wt-sub" }, finalZh),
+        ),
+      );
+    }
+
+    function nAt(stateIdx) {
+      cancelDemo();
+      clear(els.overlay);
+
+      const desktop = h("div", { class: "win-desktop" },
+        h("div", { class: "win-wallpaper", "aria-hidden": "true" }),
+        h("div", { class: "win-window" },
+          h("div", { class: "win-titlebar" },
+            h("span", { class: "win-app-ico" }, "译"),
+            h("span", { class: "win-title" }, "新邮件 · 致 Daniel"),
+            winCaps(),
+          ),
+          h("div", { class: "win-body" },
+            h("div", { class: "win-mail-row" }, h("span", { class: "win-mail-label" }, "收件人"), h("span", null, "daniel@acme.com")),
+            h("div", { class: "win-mail-row" }, h("span", { class: "win-mail-label" }, "主题"), h("span", null, "Re: 报价确认")),
+            h("div", { class: "win-body-text", id: "winBodyText" },
+              stateIdx >= 3 ? finalZh : "",
+              stateIdx >= 3 ? null : h("span", { class: "win-placeholder" }, "点击开始输入 · 按住 Win+H 说话，成稿自动写入"),
+            ),
+            stateIdx === 2 ? h("span", { class: "bar-cursor win-cursor", "aria-hidden": "true" }) : null,
+          ),
+        ),
+        winTaskbar(),
+        stateIdx <= 2 || stateIdx === 3 ? winPill(stateIdx) : null,
+        stateIdx === 3 ? winToast() : null,
+        stateIdx === 4 ? winQuickPanel() : null,
+      );
+
+      els.overlay.appendChild(desktop);
+      currentStateIdx = stateIdx;
+      updateControlsActive();
+    }
+
+    function runN() {
+      nAt(0);
+      schedule(() => nAt(1), 1800);
+      schedule(() => nAt(2), 3400);
+      schedule(() => nAt(3), 5400);
+    }
+
+    window.__runState = nAt;
+    runN();
+    showHint("Windows 11 · Win+H 按住说话 → Fluent pill 成稿 → 落入邮件正文；最后一态查看任务栏托盘快速面板", 4600);
+  }
+
+  // ============================================================
+  // v7.2 · Tab O · Android 端（Material 3 / Material You）
+  // 状态：键盘展开 → 语音输入 → 成稿候选 → 已落框 → App 主页
+  // 设计语言：Gboard · 打孔屏 · 动态色 tonal surface · NavigationBar + FAB
+  // ============================================================
+  function renderO() {
+    els.hostTitle.textContent = "Android · 译语";
+    els.hostInput.value = "";
+    els.hostInput.disabled = true;
+    els.hostThread.innerHTML = "";
+
+    const STATES = ["键盘展开", "语音输入", "成稿候选", "已落框", "App 主页"];
+    setDemoControls(STATES, runO, () => oAt(0));
+
+    const original = "下周三能签吗？";
+    const draftZh = "下周三之前应该可以签合同。";
+    const finalZh = "下周三之前应该可以把合同签了。";
+
+    // Android 状态栏：左时间 · 右图标（与 iOS 相反）
+    function aStatus() {
+      return h("div", { class: "android-status" },
+        h("span", { class: "as-time" }, "14:32"),
+        h("span", { class: "as-icons", "aria-hidden": "true", innerHTML:
+          '<svg viewBox="0 0 46 12" width="46" height="12" fill="currentColor"><path d="M3 9.8 6.4 6.4 9.8 9.8z"/><path d="M13.5 9.8 18 5.3l4.5 4.5z" opacity="0.85"/><rect x="28" y="3.2" width="10" height="7" rx="1.8" fill="none" stroke="currentColor"/><rect x="29.3" y="4.5" width="5.6" height="4.4" rx="0.8"/><rect x="38.8" y="5.2" width="1.5" height="2.8" rx="0.7"/></svg>' }),
+      );
+    }
+
+    // Gboard 键盘（Material 动态色）
+    function gboard(stateIdx) {
+      const kb = h("div", { class: "gboard" });
+
+      // 工具条：G 标识 + 建议 chips + 语音钮
+      kb.appendChild(h("div", { class: "gb-toolbar" },
+        h("span", { class: "gb-logo", "aria-hidden": "true" }, "G"),
+        h("div", { class: "gb-chips" },
+          ...(stateIdx >= 2 ? [] : [h("span", { class: "gb-chip" }, "在吗"), h("span", { class: "gb-chip" }, "好的")]),
+          h("span", { class: "gb-chip brand" }, stateIdx >= 2 ? draftZh.slice(0, 9) + "…" : "收到"),
+        ),
+        h("button", { type: "button", class: `gb-mic ${stateIdx === 1 ? "on" : ""}`, "aria-label": "语音输入" }, icon("mic", "sm")),
+      ));
+
+      // 成稿候选（态 2）：M3 chip 双选
+      if (stateIdx === 2) {
+        kb.appendChild(h("div", { class: "gb-candidates rise-in" },
+          h("span", { class: "gbc-label" }, "译语成稿"),
+          h("button", { type: "button", class: "gb-cand primary" }, draftZh),
+          h("button", { type: "button", class: "gb-cand" }, "Can we sign it by next Wednesday?"),
+        ));
+      }
+
+      // 键区 / 语音全屏区
+      if (stateIdx === 1) {
+        kb.appendChild(h("div", { class: "gb-voice rise-in" },
+          h("div", { class: "gbv-mic", "aria-hidden": "true" }, icon("mic", "lg")),
+          h("div", { class: "gbv-wave", "aria-hidden": "true" }, ...Array.from({ length: 14 }, () => h("span"))),
+          h("div", { class: "gbv-text" }, "正在聆听：", h("strong", null, original)),
+          h("div", { class: "gbv-hint" }, "松手成稿 · 译语本地引擎 · 0 ¥"),
+        ));
+      } else {
+        const keys = [
+          ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
+          ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
+          ["z", "x", "c", "v", "b", "n", "m"],
+        ];
+        const body = h("div", { class: "gb-keys" });
+        keys.forEach((row, ri) => {
+          const r = h("div", { class: "gb-key-row" });
+          if (ri === 2) r.appendChild(h("button", { type: "button", class: "gb-key fn" }, "⇧"));
+          row.forEach((k) => r.appendChild(h("button", { type: "button", class: "gb-key" }, k)));
+          if (ri === 2) r.appendChild(h("button", { type: "button", class: "gb-key fn" }, "⌫"));
+          body.appendChild(r);
+        });
+        body.appendChild(h("div", { class: "gb-key-row gb-bottom" },
+          h("button", { type: "button", class: "gb-key fn" }, "?123"),
+          h("button", { type: "button", class: "gb-key fn" }, ","),
+          h("button", { type: "button", class: "gb-key space" }, "中文"),
+          h("button", { type: "button", class: "gb-key fn" }, "."),
+          h("button", { type: "button", class: "gb-key enter" }, "发送"),
+        ));
+        kb.appendChild(body);
+      }
+
+      // 手势导航条
+      kb.appendChild(h("div", { class: "gb-gesture", "aria-hidden": "true" }));
+      return kb;
+    }
+
+    function oAt(stateIdx) {
+      cancelDemo();
+      clear(els.overlay);
+
+      // 态 4：Material You App 主页
+      if (stateIdx === 4) {
+        const app = h("div", { class: "phone-frame android m3-app" },
+          h("span", { class: "phone-punchhole", "aria-hidden": "true" }),
+          aStatus(),
+          h("div", { class: "m3-top" },
+            h("div", null,
+              h("div", { class: "m3-title" }, "译语"),
+              h("div", { class: "m3-sub" }, "BYOK · 零采集 · 本地优先"),
+            ),
+            h("span", { class: "m3-avatar" }, "K"),
+          ),
+          h("div", { class: "m3-scroll" },
+            h("div", { class: "m3-card tonal" },
+              h("div", { class: "m3-card-head" },
+                h("span", { class: "m3-badge" }, "最近成稿"),
+                h("span", { class: "m3-time" }, "刚刚 · 微信"),
+              ),
+              h("div", { class: "m3-src" }, "那个报价我确认没问题，下周三之前可以把合同签了。"),
+              h("div", { class: "m3-tgt" }, "Confirmed, no problem with the quote. We can sign the contract before next Wednesday."),
+              h("div", { class: "m3-card-actions" },
+                h("button", { type: "button", class: "m3-chipbtn" }, icon("copy", "sm"), " 复制"),
+                h("button", { type: "button", class: "m3-chipbtn" }, icon("refresh", "sm"), " 重说"),
+              ),
+            ),
+            h("div", { class: "m3-card list" },
+              h("div", { class: "m3-row" }, h("span", { class: "m3-ico" }, icon("chip")), h("span", { class: "m3-name" }, "模型"), h("span", { class: "m3-meta" }, "qwen2.5:7b"), h("span", { class: "m3-chevron" }, "›")),
+              h("div", { class: "m3-row" }, h("span", { class: "m3-ico" }, icon("keyboard")), h("span", { class: "m3-name" }, "译语键盘"), h("span", { class: "m3-meta" }, "已启用"), h("span", { class: "m3-chevron" }, "›")),
+              h("div", { class: "m3-row" }, h("span", { class: "m3-ico" }, icon("globe")), h("span", { class: "m3-name" }, "语言方向"), h("span", { class: "m3-meta" }, "中文 ⇄ English"), h("span", { class: "m3-chevron" }, "›")),
+              h("div", { class: "m3-row" }, h("span", { class: "m3-ico" }, icon("shield")), h("span", { class: "m3-name" }, "隐私锁"), h("span", { class: "m3-meta" }, "指纹解锁"),
+                h("label", { class: "switch" }, h("input", { type: "checkbox", checked: "" }), h("span", { class: "sw-track" }), h("span", { class: "sw-thumb" })),
+              ),
+            ),
+          ),
+          h("button", { type: "button", class: "m3-fab", "aria-label": "按住说话" }, icon("mic", "lg")),
+          h("div", { class: "m3-navbar" },
+            h("button", { type: "button", class: "m3-nav-item active" }, h("span", { class: "m3-nav-pill" }, icon("home")), h("span", { class: "m3-nav-label" }, "首页")),
+            h("button", { type: "button", class: "m3-nav-item" }, h("span", { class: "m3-nav-pill" }, icon("clock")), h("span", { class: "m3-nav-label" }, "历史")),
+            h("button", { type: "button", class: "m3-nav-item" }, h("span", { class: "m3-nav-pill" }, icon("smile")), h("span", { class: "m3-nav-label" }, "我的")),
+          ),
+        );
+        els.overlay.appendChild(app);
+        currentStateIdx = stateIdx;
+        updateControlsActive();
+        return;
+      }
+
+      // 态 0–3：微信 + Gboard 键盘流程
+      const phone = h("div", { class: "phone-frame android" },
+        h("span", { class: "phone-punchhole", "aria-hidden": "true" }),
+        aStatus(),
+        h("div", { class: "phone-host" },
+          h("div", { class: "phone-thread", innerHTML:
+            `<div style="display:flex;flex-direction:column;gap:8px;padding:14px 12px;height:100%;box-sizing:border-box;background:linear-gradient(180deg,#f8f8f8 0%,#efefef 100%)">
+              <div style="font-size:11px;color:#999;text-align:center">微信 · 给李总</div>
+              <div style="background:#fff;align-self:flex-start;padding:9px 12px;border-radius:4px 12px 12px 12px;font-size:13px;max-width:78%;color:#000;border:1px solid #e8e8e8">确认一下，这周能把合同定下来吗？</div>
+              <div style="background:#95EC69;align-self:flex-end;padding:9px 12px;border-radius:12px 4px 12px 12px;font-size:13px;max-width:78%;color:#000">如果价格合适，我们愿意直接推进。</div>
+            </div>` }),
+          h("div", { class: "phone-input-row" },
+            h("button", { class: "phone-mic", type: "button", "aria-label": "语音" }, icon("mic")),
+            h("input", { type: "text", class: "phone-input", placeholder: "消息", value: stateIdx >= 3 ? finalZh : stateIdx >= 2 ? original : "" }),
+            h("button", { class: "phone-emoji", type: "button", "aria-label": "表情" }, icon("smile")),
+          ),
+        ),
+        gboard(stateIdx),
+      );
+
+      // 态 3：M3 Snackbar 反馈
+      if (stateIdx === 3) {
+        const snack = h("div", { class: "m3-snackbar rise-in" }, icon("check", "sm"), "已写入成稿 · 本地处理 · 0 ¥");
+        phone.appendChild(snack);
+        schedule(() => {
+          snack.classList.add("rise-exit");
+          schedule(() => snack.remove(), 250);
+        }, 2400);
+      }
+
+      els.overlay.appendChild(phone);
+      currentStateIdx = stateIdx;
+      updateControlsActive();
+    }
+
+    function runO() {
+      oAt(0);
+      schedule(() => oAt(1), 1600);
+      schedule(() => oAt(2), 3400);
+      schedule(() => oAt(3), 5200);
+    }
+
+    window.__runState = oAt;
+    runO();
+    showHint("Android · Gboard 语音成稿 → Material You 动态色；最后一态查看译语 App 主页（NavigationBar + FAB）", 4600);
   }
 
 
@@ -1843,7 +2269,7 @@
       const row = h("div", { class: `hotkey-row ${hk.conflict ? "conflict" : ""}` },
         h("span", { class: "hk-label" }, hk.label),
         h("button", { type: "button", class: "hk-key", title: "点击重新录制" }, hk.key),
-        h("span", { class: `hk-status ${hk.conflict ? "err" : "ok"}` }, hk.conflict ? `⚠ 与 ${hk.with} 冲突` : "可用"),
+        h("span", { class: `hk-status ${hk.conflict ? "err" : "ok"}` }, hk.conflict ? `与 ${hk.with} 冲突` : "可用"),
       );
       els.hotkeyList.appendChild(row);
     });
