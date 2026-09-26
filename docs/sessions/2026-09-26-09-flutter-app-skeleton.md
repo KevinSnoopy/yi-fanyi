@@ -56,3 +56,5 @@ python3 smoke_web.py       # 15/15 PASS, 0 errors（需本地 8137 静态服务 
 **解除阻塞任选其一**：① 平台工作空间设置中配置 GitHub 凭证（credential helper 即刻可用）；② 重新上传 ghp_ token 到 uploads；③ 给 MCP GitHub 集成授予 Contents: Read and write。
 
 **预览**：https://a202ee7f987a30e94.app.workbuddy.host （Flutter Web release，15 页全量）
+
+> **更新**：用户重新上传 token（ghp_）后 push 已完成 —— `50f0949..adb958c master -> master`（HTTP/1.1 + /etc/hosts 真实 IP 直连）。远端与本地面提交全量一致（40 文件，字体不入库改由 `bash tool/fetch_fonts.sh` 获取）。
