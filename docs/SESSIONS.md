@@ -7,6 +7,7 @@
 
 | 日期 | 会话 | 任务 | 摘要 | 结果 |
 |---|---|---|---|---|
+| 2026-09-26 | [`2026-09-26-08-t015-typeless-chatterfly`](./sessions/2026-09-26-08-t015-typeless-chatterfly.md) | T-015 | 用户拍板参考系 Typeless + Chatterfly（成稿为主、翻译是开关）：PRD v3.2 定位对齐（§1/§2 流程 A/§3/§5/§6 + 部署版 8 处同步）+ Chatterfly/Typeless 竞品情报全量重写 + v7 原型 `prototypes/v7-spa/`（Tab A 成稿范式 + pill 160×36 + 「译」开关默认关 + Tab K 六场景；补 ADR-008 取消按钮与 K→A 残留两处修复；无头冒烟 0 错误）+ 协议文档全量对齐 | ✅ 完成 |
 | 2026-09-26 | [`2026-09-26-07-prd-tidy-v6-prototype`](./sessions/2026-09-26-07-prd-tidy-v6-prototype.md) | T-017 | v6 13 页全量原型落地 `prototypes/v6-spa/`（Tab A–M + Popover + 走查面板；修 v5 遗留 runA/孤儿 timer bug；无头冒烟通过）+ PRD v3.1 整理修订（计数 22 实测/断链/页面表）+ prototypes/README 重写 + 协议文档对齐 | ✅ 完成 |
 | 2026-09-26 | [`2026-09-26-06-prd-v3-push`](./sessions/2026-09-26-06-prd-v3-push.md) | T-016 | PRD v3.0 拆分上线（仅 §1-9 需求；§10/§11/§12 下沉到 ADR-002 + roadmap + ADR-005~008）+ v5 SPA 原型 push 到 `prototypes/v5-spa/` + PRD 部署版 HTML 到 `assets/` + CONTEXT/TASKS/roadmap 同步 | ✅ 完成 |
 | 2026-09-26 | [`2026-09-26-05-t014-research`](./sessions/2026-09-26-05-t014-research.md) | T-005 + T-010 | T-005 拍板选 ①；T-010 完成 HTML/CSS/JS 录音条三态 + 悬浮窗四态原型 + 浅深主题切换 + 部署上线 | ✅ 完成 |

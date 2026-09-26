@@ -42,7 +42,7 @@ yi-fanyi/
 │   ├── 006-prototype-spa-app.md
 │   ├── 007-provider-interface.md
 │   └── 008-recorder-bar-three-states.md
-├── prototypes/              ← 设计原型（现行 v6-spa 13 页全量；v5-spa 留档；v1 作废）
+├── prototypes/              ← 设计原型（现行 v7-spa 13 页全量·成稿范式；v6-spa、v5-spa 留档；v1 作废）
 ├── pages-specs/             ← 每个页面的字段级原型说明（待建，T-012）
 └── assets/                  ← PRD 部署版 HTML（PRD_v3.0_deploy.html）+ 原始 docx/源档备份
 ```

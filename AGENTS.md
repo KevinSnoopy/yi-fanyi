@@ -41,7 +41,7 @@ yi-fanyi/
 ├── decisions/             ← ADR：001 BYOK / 002 买断 / 003 五端 / 004 Flutter
 │                            005 菜单栏范式 / 006 SPA原型 / 007 Provider接口 / 008 三态并列
 ├── competitors/           ← 竞品分析：typeless / chatterfly / bob
-├── prototypes/            ← 设计原型：v6-spa（现行 13 页）/ v5-spa（留档）/ v1（作废）
+├── prototypes/            ← 设计原型：v7-spa（现行 13 页·成稿范式）/ v6、v5-spa（留档）/ v1（作废）
 ├── pages-specs/           ← 页面字段级原型（选项 ③ 落地目录，待建 T-012）
 └── assets/                ← PRD 部署版 HTML + 原始 docx 备份
 ```
@@ -93,8 +93,8 @@ yi-fanyi/
 | macOS 主交互 | **菜单栏 Popover 范式**，不做常驻主窗口（ADR-005） |
 | 原型形态 | **SPA 三文件零依赖**（HTML+CSS+JS），无构建无 CDN（ADR-006） |
 | Provider 接口 | 统一抽象 `TranslationProvider`（ADR-007） |
-| 录音条设计 | **三态并列展示**为强制项（ADR-008；形态 A/B/C 选择仍等用户拍板 T-015） |
-| 语音交互 | 按住 Fn 说话 → 松手成稿，1.2s 预览后悔窗口（PRD §2.1） |
+| 录音条设计 | **三态并列展示**为强制项（ADR-008）；形态已拍板 **Typeless pill**（160×36 基准，T-015 用户口径 2026-09-26） |
+| 语音交互 | 按住 Fn 说话 → 松手**同语言成稿**（默认），pill 右侧「译」翻译开关默认关，1.2s 预览后悔窗口（PRD v3.2 §2.1） |
 | 已知硬约束 | iOS 键盘内不能录音、不能自动切换键盘（PRD §2.6） |
 
 ## 6. 常见歧义与澄清
