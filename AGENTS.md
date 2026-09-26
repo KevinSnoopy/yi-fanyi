@@ -25,8 +25,7 @@
 ```
 yi-fanyi/
 ├── AGENTS.md              ← 本文件：Agent 入口
-├── PRD_v3.0.md            ← 产品需求最新版（v3.x 内容；文件名沿用）
-├── PRD_v2.0.md            ← v2.0 基线留档（不再更新）
+├── PRD_v3.0.md            ← **唯一 PRD**（v3.x 内容；文件名沿用。v2.0 与 assets 部署版已删除收敛）
 ├── roadmap.md             ← 实施路线图、工期、里程碑、项目风险
 ├── next_steps.md          ← 下一步三选项决策记录（未决策）
 ├── README.md              ← 对外公开介绍（不含内部进度）
@@ -41,9 +40,9 @@ yi-fanyi/
 ├── decisions/             ← ADR：001 BYOK / 002 买断 / 003 五端 / 004 Flutter
 │                            005 菜单栏范式 / 006 SPA原型 / 007 Provider接口 / 008 三态并列
 ├── competitors/           ← 竞品分析：typeless / chatterfly / bob
-├── prototypes/            ← 设计原型：v7-spa（现行 13 页·成稿范式）/ v6、v5-spa（留档）/ v1（作废）
+├── prototypes/            ← **唯一原型** v7-spa（13 页·成稿范式）；v1/v5/v6 已删除收敛，禁止重建旧版
 ├── pages-specs/           ← 页面字段级原型（选项 ③ 落地目录，待建 T-012）
-└── assets/                ← PRD 部署版 HTML + 原始 docx 备份
+└── assets/                ← （已清空删除；曾存放 PRD 部署版 HTML 与源档备份）
 ```
 
 ## 3. 会话工作流协议
@@ -100,6 +99,6 @@ yi-fanyi/
 ## 6. 常见歧义与澄清
 
 - **"五端"** = macOS / Windows / Linux / iOS / Android；**"端侧"** = 用户设备上的本地模型
-- **流程 A–E** 的编号全局引用：A 语音翻译输入、B 悬浮窗、C 划词、D 静默替换、E 截图 OCR；v6 原型扩展到 **A–M** 共 13 页（H 主窗首页 / I 模型配置 / J 快捷键 / K 偏好·术语·Skills / L 首次引导 / M 移动 App），对照表见 [`prototypes/README.md`](./prototypes/README.md)
+- **流程 A–E** 的编号全局引用：A 语音成稿输入、B 悬浮窗、C 划词、D 静默替换、E 截图 OCR；原型已扩展到 **A–M** 共 13 页（H 主窗首页 / I 模型配置 / J 快捷键 / K 偏好·术语·Skills / L 首次引导 / M 移动 App），对照表见 [`prototypes/README.md`](./prototypes/README.md)
 - **P0** = macOS MVP 必须交付；**P1** = MVP 之后补完
 - 竞品价格/功能均为二手调研，**未实测**，不要当作事实引用（见 `competitors/` 待调研项）

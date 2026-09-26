@@ -35,6 +35,7 @@ PRD v2.0 §6 列了 13 个页面原型。早期 v1 原型尝试每个页面独�
 ## 4. 影响
 
 - **v5 落地**：[`prototypes/v5-spa/`](../../prototypes/v5-spa/)（index.html 18.8KB + app.js 40.8KB + styles.css 44.7KB）
+  - *2026-09-26 注：v5/v6 已按用户要求删除收敛，路径为历史引用（git 历史 `7442094` 可溯）；SPA 形态由唯一现行 [`prototypes/v7-spa/`](../../prototypes/v7-spa/) 继承*
 - **v6 扩展**：在 v5 基础上增加 6 个 tab（PRD §6 黄色项），不重建
 - **真实产品**：Flutter 是路由化的，但 UI 设计 Token 与组件库共享一份（Flutter Material / 自研组件映射同一套 token）
 - **PRD v3.0**：§6 页面清单表头标注「v5 实现」+ 「v6 待补」列

@@ -1,35 +1,22 @@
 # Prototypes · 设计原型
 
-> **现行版本：`v7-spa/`（13 页全量 · 成稿范式，2026-09-26，对应任务 T-015 落地）**
+> **唯一现行版本：`v7-spa/`（13 页全量 · 成稿范式，2026-09-26，T-015 落地）**
 > 对齐用户拍板参考系 **Typeless + Chatterfly**：**成稿为主，翻译是开关**（PRD v3.2）。
 > 覆盖 PRD §6 全部 13 项页面需求 + Popover 最近译文（§6 #13 / ADR-005）。
 > 打开方式：浏览器直接打开 `v7-spa/index.html`，右下角「❓ 走查」有 13 页演示路径。
+>
+> ⚠️ **本目录仅保留 v7 一套原型**。v1（recorder-bar / floating-window / index 三件）、v5-spa、v6-spa 已按用户要求删除收敛（避免多 Agent 误用旧版范式）；历史实现与已知问题记录可在 git 历史（`7442094` 及之前）中追溯。
 
 ## 版本演进
 
-| 版本 | 状态 | 页数 | 说明 |
-|---|---|---|---|
-| **v7-spa** | ✅ **现行** | 13 页 | 成稿范式改造：Tab A 重写为「同语言成稿 + pill 录音条 + 翻译开关（默认关）」，Tab K Skills 扩为六场景（对齐 Chatterfly），场景改国内语境（微信 · 给李总的消息） |
-| v6-spa | 🗄 留档 | 13 页 | 翻译范式（录音即翻译）；v7 的基座，交互骨架与 Token 全部沿用 |
-| v5-spa | 🗄 留档 | 7 页 | A–G 流程页；存在已知问题（见下），被 v6 取代，不再维护 |
-| v1（本目录根下三件） | ⛔ 作废 | 2 组件 | 录音条三态 + 悬浮窗四态；错误地把「翻译」做成主角，被 v5 推翻 |
+| 版本 | 状态 | 说明 |
+|---|---|---|
+| **v7-spa** | ✅ **唯一现行** | 13 页成稿范式：Tab A「同语言成稿 + pill 录音条 + 翻译开关（默认关）」，Tab K Skills 六场景（对齐 Chatterfly），场景国内语境（微信 · 给李总的消息） |
+| v6-spa | 🗑 已删除 | 翻译范式（录音即翻译）；v7 的基座，交互骨架与 Token 沿用至今 |
+| v5-spa | 🗑 已删除 | 7 页（A–G）；runA 引用错误 / 孤儿 timer 竞态等已知问题在 v6 修复 |
+| v1（根下三件） | 🗑 已删除 | 录音条三态 + 悬浮窗四态；错误地把「翻译」做成主角，被 T-010 复盘推翻 |
 
-## v7-spa · 成稿范式（现行）
-
-相对 v6 的改动（其余 11 Tab 交互与视觉完全沿用 v6，见下方 v6 总表）：
-
-- **Tab A 重写（核心）**：
-  - 范式：按住 Fn 说话 → 松手**同语言成稿**（口语进、书面语出）→ 预览（1.2s 可改）→ 落框；翻译不再是默认动作
-  - pill 录音条：Typeless 式胶囊（PRD v3.2 §5.1：160×36 基准，预览态自适应加宽），替代 v6 的 280×32 细条
-  - 翻译开关：pill 右侧常驻「译」开关（**默认关**）；打开后成稿→翻译中→英文写入，pill 边框高亮 + 标记「中→EN」
-  - 状态序列：录音中 → 成稿中（开关开=「翻译中」）→ 预览 → 已落框；处理态保留 Esc 取消（ADR-008）
-- **Tab K · Skills 子页**：扩为六场景对齐 Chatterfly——会议纪要 / 工作汇报 / 项目进度 / 营销文案 / 邮件润色 / Vibe-Coding 提示词 + 新建 Skill（全宽卡）
-- **Tab A/B 场景本地化**：A 用微信 · 给李总的消息（国内口语语境）；B 保留 Slack（跨语言协作场景）
-- **修复**：`renderA` 切回时清空 `hostThread`（修复 K→A 切换后设置页残留）；Tab A 演示延时迁移到 `schedule()` 统一管理
-
-冒烟验证（Chromium 无头）：13 Tab 遍历、翻译开关开/关与 `data-trans` 属性、处理态 Esc 取消、Skills 六卡片渲染、pill 形态，**0 pageerror**。
-
-## v6-spa · 13 页总表（v7 沿用，Tab A/K 已按 v7 改造）
+## v7-spa · 13 页总表
 
 | Tab | 页面 | 优先级 | PRD 依据 | 演示状态 |
 |---|---|---|---|---|
@@ -48,6 +35,13 @@
 | M | 移动 App | P1 | §6 #11 | 手机框 App 主页 + FaceID 锁 |
 | — | Popover 最近译文 | — | §6 #13 / ADR-005 | 右上菜单栏图标 → 最近一条 + 复制/注入 |
 
+**v7 核心改动**（相对 v6 基座，其余 11 Tab 交互沿用）：
+
+- **Tab A 成稿范式**：默认同语言成稿（口语进、书面语出）；pill 右侧常驻「译」开关（**默认关**），开启后成稿→翻译→写入目标语言（可配双语）；pill 形态 Typeless 式 160×36 基准（PRD v3.2 §5.1），预览态自适应加宽
+- **Tab K Skills 六场景**：会议纪要 / 工作汇报 / 项目进度 / 营销文案 / 邮件润色 / Vibe-Coding 提示词 + 新建 Skill（全宽卡）
+- **ADR-008 三态并列合规**：同一 bar 组件三态流转（外形/位置/动画一致）、处理态「Esc 取消」可见、1.2s 后悔窗口「✓ 1.2s / ✗ 重说」标注、`showHint` 转移说明
+- **冒烟基线**：Chromium 无头 13 Tab 遍历 + 开关断言 + Skills 六卡渲染，0 pageerror
+
 **交互约定**：
 
 - **H/I/J/K 为「整页模式」**：内容铺满主窗、隐藏底部输入框；页面内左侧导航可直达 H/I/J/K/F/L，或「回到语音输入」（PRD §5.3 ④）
@@ -56,38 +50,20 @@
 - **主题**：跟随系统浅/深色；品牌主色 #4F7CFF（PRD §5.2）
 - **走查面板**：右下角「❓ 走查」展开 5 条演示路径（Esc 关闭）
 
-**技术形态**：三文件零依赖（`index.html` + `styles.css` + `app.js`），IIFE 无全局污染，`h()` DOM 工厂 + `render{A..M}` 分发；无构建、无 CDN（ADR-006）。交付前已过 Chromium 无头冒烟：13 Tab 切换、page-mode 切换、走查面板、快捷键、Popover 复制/注入，均无 JS 报错。
-
-## v5-spa（留档，已知问题）
-
-7 页（A–G），v6 的基座。**留档不维护**，已知问题 v6 均已修复：
-
-- `setDemoControls(STATES, runA, resetA)` 引用未定义的 `runA` → 控制台 ReferenceError（v6 改传 `autoPlay`）
-- `.privacy-banner` / `.lock-card` / `.phone-frame` 等引用未定义变量 `--surface` / `--shadow-lg`（v6 在 `:root` 补兼容别名）
-- 品牌色为占位紫 `#6366F1`，与 PRD §5.2 不符（v6 统一为 `#4F7CFF`）
-- 演示延时回调用单一 `playTimer` 变量，快速切 Tab 产生孤儿回调（v6 改为 `playTimers` 集合统一清理）
-
-## v1（作废）
-
-用户口径：正确范式是「语音输入为主、翻译可选」，参考系 Typeless / Wispr Flow / Chatterfly，不是有道翻译。本目录根下 `recorder-bar.html` / `floating-window.html` / `index.html` 仅作历史留档；线上预览 **https://kox5otr2as3d.space.mcode.cn** 请勿评审。调研结论见 `docs/competitor-research/`。
+**技术形态**：三文件零依赖（`index.html` + `styles.css` + `app.js`），IIFE 无全局污染，`h()` DOM 工厂 + `render{A..M}` 分发；无构建、无 CDN（ADR-006）。
 
 ## 文件清单
 
 ```
 prototypes/
 ├── README.md            本文件
-├── v7-spa/              ✅ 现行 · 13 页全量 · 成稿范式（index.html / styles.css / app.js）
-├── v6-spa/              🗄 留档 · 13 页 · 翻译范式（v7 基座）
-├── v5-spa/              🗄 留档 · 7 页（A–G）
-├── recorder-bar.html    ⛔ v1 作废
-├── floating-window.html ⛔ v1 作废
-└── index.html           ⛔ v1 作废（演示页）
+└── v7-spa/              ✅ 唯一现行 · 13 页全量 · 成稿范式（index.html / styles.css / app.js）
 ```
 
 ## Design Token（取自 PRD §5.2，硬编码以便校对）
 
 ```
-品牌主色    浅 #4F7CFF    深 #5B8CFF      ← v6 已对齐（v1/v5 的 #6366F1 已废弃）
+品牌主色    浅 #4F7CFF    深 #5B8CFF      ← 自 v6 起对齐（v1/v5 的 #6366F1 已废弃）
 强调色      浅 #FF7A45    深 #FF8A5C
 悬浮窗背景  浅 #FFFFFFEB  深 #1E1F24E0
 正文文字    浅 #1D2129    深 #E8EAED
@@ -101,7 +77,6 @@ prototypes/
 
 ```
 录音 / 状态条（v7 pill）  160 × 36px 基准   预览态自适应加宽（max 400px），胶囊形
-录音 / 状态条（v6 细条）  280 × 32px        屏幕底部居中偏上 80px（留档）
 迷你悬浮窗               380 × 自适应      min 120 / max 480px 滚动
 圆角（按钮 8 / 输入 10 / 卡片 10 / 悬浮窗 14 / pill 999px）
 阴影（悬浮窗 24% 黑，y8, blur24）
@@ -114,6 +89,7 @@ prototypes/
 - 不引入第三方 UI 库与外部 CDN；保持零依赖，方便 1:1 平移到 Flutter
 - 不打包、不构建；纯文件，git diff 即变更
 - 不复刻任何竞品文案与视觉，只借鉴通用交互范式
+- 不新建第二套原型副本；后续迭代直接在 v7-spa 内演进（版本记录写进本 README 演进表）
 
 ## 下一步
 

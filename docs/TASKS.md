@@ -23,7 +23,7 @@
 
 | ID | 任务 | 状态 | 依赖 | 验收要点 | 关联 |
 |---|---|---|---|---|---|
-| T-001 | PRD v2.0 精简为纯产品需求文档 | ✅ 2026-09-26 | — | 仅含 §1–§9 需求；商业/风险/下一步已下沉 | [`PRD_v2.0.md`](../PRD_v2.0.md) |
+| T-001 | PRD v2.0 精简为纯产品需求文档 | ✅ 2026-09-26 | — | 仅含 §1–§9 需求；商业/风险/下一步已下沉 | `PRD_v2.0.md`（2026-09-26 已删除收敛） |
 | T-002 | 四个核心 ADR 归档 | ✅ 2026-09-26 | — | BYOK / 买断 / 五端 / Flutter 四份齐备 | [`decisions/`](../decisions/) |
 | T-003 | 竞品初步调研 | 🟡 部分 | — | 三份竞品文档已建，待实测项未完成 | [`competitors/`](../competitors/) |
 | T-004 | 建立多 Agent 接续协议 | ✅ 2026-09-26 | — | `AGENTS.md` + `docs/` 四件套 + 会话回执模板 | [`AGENTS.md`](../AGENTS.md) |
@@ -41,8 +41,8 @@
 | T-013 | Design Token 落地（浅/深主题 + 组件规格） | ⬜ | T-014 | Token 表与新版口径一致，组件覆盖 ①–⑥ | PRD §5 |
 | T-014 | Typeless + Wispr Flow + Spokenly + MacWhisper 官网设计调研 | ✅ 2026-09-26 | — | 覆盖 4 家（超出原 Typeless+Chatterfly 计划）；HTML+CSS 提取 + 9 张截图 + vision 分析。**回执** [`2026-09-26-05-t014-research.md`](./sessions/2026-09-26-05-t014-research.md)，**主文档** [`competitor-research/README.md`](./competitor-research/README.md) | docs/competitor-research/ |
 | T-015 | 按用户新口径重做原型（语音为主 / 翻译可选） | ✅ 2026-09-26 | T-014 + 用户口径 | 用户拍板参考系 **Typeless + Chatterfly**：成稿为主、翻译是开关。PRD v3.2 定位对齐（§1/§2 流程 A/§3/§5/§6 + 部署版同步）+ Chatterfly/Typeless 竞品情报全量重写 + v7 原型 `prototypes/v7-spa/`（Tab A 成稿范式 + pill 160×36 + 「译」开关默认关；Tab K Skills 六场景；无头冒烟 0 错误）。**回执** [`2026-09-26-08-t015-typeless-chatterfly.md`](./sessions/2026-09-26-08-t015-typeless-chatterfly.md) | `prototypes/v7-spa/` + `PRD_v3.0.md` v3.2 |
-| T-016 | PRD v3.0 + ADR-005~008 + v5 SPA 原型 push 到 GitHub | ✅ 2026-09-26 | T-014 | PRD v3.0 拆分合规 + 4 个新 ADR + v5 SPA 落 `prototypes/v5-spa/` + 部署版 HTML 落 `assets/`。**回执** [`2026-09-26-06-prd-v3-push.md`](./sessions/2026-09-26-06-prd-v3-push.md) | `PRD_v3.0.md` + `decisions/005-008/` + `prototypes/v5-spa/` |
-| T-017 | v6 完整 13 页原型（v5 基础上扩 6 个 tab） | ✅ 2026-09-26 | T-016 + 用户本轮指令 | 13/13 Tab 全落地（H 主窗首页 / I 模型配置 / J 快捷键 / K 偏好+术语+Skills / L 首次引导 / M 移动 App）+ Popover 最近译文（§6 #13）+ 走查面板；Chromium 无头冒烟通过。**回执** [`2026-09-26-07-prd-tidy-v6-prototype.md`](./sessions/2026-09-26-07-prd-tidy-v6-prototype.md) | `prototypes/v6-spa/` |
+| T-016 | PRD v3.0 + ADR-005~008 + v5 SPA 原型 push 到 GitHub | ✅ 2026-09-26 | T-014 | PRD v3.0 拆分合规 + 4 个新 ADR + v5 SPA 落 `prototypes/v5-spa/`（已删除收敛）+ 部署版 HTML 落 `assets/`（已删除收敛）。**回执** [`2026-09-26-06-prd-v3-push.md`](./sessions/2026-09-26-06-prd-v3-push.md) | `PRD_v3.0.md` + `decisions/005-008/` |
+| T-017 | v6 完整 13 页原型（v5 基础上扩 6 个 tab） | ✅ 2026-09-26 | T-016 + 用户本轮指令 | 13/13 Tab 全落地（H 主窗首页 / I 模型配置 / J 快捷键 / K 偏好+术语+Skills / L 首次引导 / M 移动 App）+ Popover 最近译文（§6 #13）+ 走查面板；Chromium 无头冒烟通过。`prototypes/v6-spa/` 已删除收敛，成果由 v7-spa 继承。**回执** [`2026-09-26-07-prd-tidy-v6-prototype.md`](./sessions/2026-09-26-07-prd-tidy-v6-prototype.md) | `prototypes/v7-spa/`（现行） |
 
 ## Phase 2 · macOS MVP
 
@@ -70,3 +70,4 @@
 - 2026-09-26：建库，从 `roadmap.md` / `next_steps.md` / README 状态清单抽取为统一任务池
 - 2026-09-26：T-017 v6 完整 13 页原型完成（会话 07）；表头优先级引用更新为 `PRD_v3.0.md §3`（v3.1 内容修订，文件名沿用）
 - 2026-09-26：T-015 完成（会话 08）——用户拍板 Typeless + Chatterfly 参考系；T-021 验收要点同步为成稿范式（PRD v3.2 §2.1）
+- 2026-09-26：仓库收敛为单 PRD（`PRD_v3.0.md`）+ 单原型（`prototypes/v7-spa/`），v1/v5/v6 原型、`PRD_v2.0.md`、`assets/` 三件删除（用户指令：避免多 Agent 干扰）；历史任务行关联列已标注删除状态

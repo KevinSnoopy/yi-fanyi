@@ -7,17 +7,18 @@
 
 | 任务 | 状态 | 备注 |
 |---|---|---|
-| PRD v2.0 完整记录 | ✅ done | `PRD_v2.0.md`（v2.0 基线留档） |
+| PRD v2.0 完整记录 | ✅ done | `PRD_v2.0.md`（2026-09-26 已删除收敛，git 历史可溯） |
 | PRD v3.0 扩展（13 页字段级 + Design Token + 验收清单） | ✅ 2026-09-26 | `PRD_v3.0.md`（仅需求；商业模式/风险下沉） |
 | PRD v3.1 整理修订（计数/断链/页面表落地） | ✅ 2026-09-26 | 内容修订随 `PRD_v3.0.md`（文件名沿用）；部署版同步 `assets/` |
 | 竞品初步调研（Typeless/Chatterfly/Bob） | 🟡 部分 | competitors/ 已建，待实测 |
 | Typeless/Wispr Flow/Spokenly/MacWhisper 4 家设计调研 (T-014) | ✅ 2026-09-26 | docs/competitor-research/ + 9 张截图 |
 | ADR 001–004 核心决策（BYOK/买断/五端/Flutter） | ✅ done | decisions/ |
 | ADR 005–008（菜单栏范式/SPA原型/Provider接口/三态并列） | ✅ 2026-09-26 | decisions/005–008 |
-| v5 SPA 原型落地 | ✅ 2026-09-26 | prototypes/v5-spa/，3 文件 105KB |
-| v6 完整 13 页原型 (T-017) | ✅ 2026-09-26 | prototypes/v6-spa/，3 文件 166KB，13/13 Tab + Popover + 走查面板；无头冒烟通过 |
+| v5 SPA 原型落地 | ✅ 2026-09-26 | prototypes/v5-spa/（2026-09-26 已删除收敛） |
+| v6 完整 13 页原型 (T-017) | ✅ 2026-09-26 | prototypes/v6-spa/（已删除收敛，成果由 v7 继承）；无头冒烟通过 |
+| 仓库收敛：单 PRD + 单原型 | ✅ 2026-09-26 | 仅 `PRD_v3.0.md` + `prototypes/v7-spa/`（用户指令：避免多 Agent 干扰；assets/ 部署版与源档一并移除） |
 | PRD v3.2 定位对齐（T-015 口径：成稿为主、翻译是开关） | ✅ 2026-09-26 | `PRD_v3.0.md`（v3.2，文件名沿用）；部署版 `assets/` 同步；竞品情报 Chatterfly/Typeless 全量更新 |
-| v7 成稿范式原型 (T-015) | ✅ 2026-09-26 | prototypes/v7-spa/（现行），Tab A 重写 + Tab K 六场景 + pill 160×36；无头冒烟 0 错误；v6 留档 |
+| v7 成稿范式原型 (T-015) | ✅ 2026-09-26 | prototypes/v7-spa/（**唯一现行**），Tab A 重写 + Tab K 六场景 + pill 160×36；无头冒烟 0 错误 |
 | Provider 接口草案 | 🟡 部分 | ADR-007 已定义，T-011 待实施 |
 | 页面字段级规格 (pages-specs/) (T-012) | ⬜ 待开始 | 13 页每页一份 |
 

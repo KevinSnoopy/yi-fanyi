@@ -9,12 +9,10 @@
 |---|---|
 | **版本** | v3.2（v3.x 系列文件名沿用 `PRD_v3.0.md`） |
 | **日期** | 2026-09-26 |
-| **上一版本** | v2.0（[PRD_v2.0.md](./PRD_v2.0.md)） |
+| **上一版本** | v2.0（基线档已删除收敛，git 历史可溯）
 | **v3.2 相对 v3.1 变化** | **定位对齐（T-015 用户拍板：参考 Typeless + Chatterfly）**：§1.1 定位句重写（成稿为主、翻译降为开关）；§2 流程 A 重写（默认同语言成稿润色，翻译开关打开→目标语言双语写回）；§1.4 竞争对位表更新（Chatterfly 2026-09 内测情报 / Typeless 2026 现状）；§3 功能清单同步；§5.1 录音条改 Typeless 式 pill；§6 加 v7 原型列 |
-| **v3.1 相对 v3.0 变化** | 整理修订：验收清单计数修正（实为 22 项）、`pages-specs/` 失效引用改为待建标注（T-012 未建）、§6 页面清单 v6 列更新为已实现（[prototypes/v6-spa/](./prototypes/v6-spa/) 补齐 6 页）、附录 C 交叉引用同步 |
+| **v3.1 相对 v3.0 变化** | 整理修订：验收清单计数修正（实为 22 项）、`pages-specs/` 失效引用改为待建标注（T-012 未建）、§6 页面清单 v6 列更新为已实现（当时 prototypes/v6-spa/ 补齐 6 页）、附录 C 交叉引用同步 |
 | **v3.0 相对 v2.0 变化** | 补 Design Token 表、页面清单 13 页 v5/v6 差距表、验收清单 22 项可勾选；决策事项已下沉到 [`decisions/`](./decisions/) ADR-005~008（字段级规范见 `pages-specs/`，待建，T-012） |
-| **部署版** | [PRD v3.0 部署 HTML（在线阅读 + 勾选验收）](./assets/PRD_v3.0_deploy.html) |
-| **原始素材** | [`assets/PRD_v3.0_source.md`](./assets/PRD_v3.0_source.md)（合并版源档） |
 
 ---
 
@@ -232,9 +230,7 @@
 | 12 | 移动端键盘 (工具条/候选流) | 移动 | 工具条 + 译文流 | ✅ Tab G | ✅ Tab G | ✅ Tab G（沿用） |
 | 13 | 托盘/菜单栏菜单 | 桌面 | macOS 范式 | 部分 (Popover) | ✅ Popover 补全（最近一条译文 + 复制/注入按钮，ADR-005） | ✅ 沿用 |
 
-**v5 原型**（7/13，留档）：[`prototypes/v5-spa/`](./prototypes/v5-spa/)
-**v6 原型**（13/13 全量，留档）：[`prototypes/v6-spa/`](./prototypes/v6-spa/)（v5 基础上扩 6 个 tab + Popover 补全）
-**v7 原型**（13/13，现行，定位对齐 Typeless/Chatterfly）：[`prototypes/v7-spa/`](./prototypes/v7-spa/)（流程 A 成稿范式 + 翻译开关 + pill 形态 + Skills 六场景，SPA 形态见 [ADR-006](./decisions/006-prototype-spa-app.md)）
+**v7 原型**（13/13，**唯一现行**，定位对齐 Typeless/Chatterfly）：[`prototypes/v7-spa/`](./prototypes/v7-spa/)（流程 A 成稿范式 + 翻译开关 + pill 形态 + Skills 六场景，SPA 形态见 [ADR-006](./decisions/006-prototype-spa-app.md)；v1/v5/v6 已删除收敛，避免多 Agent 误用旧版）
 
 ---
 
@@ -280,7 +276,7 @@
 | 决策记录 | 仅 ADR-001~004 | + ADR-005 菜单栏范式 / 006 原型 SPA / 007 Provider 接口 / 008 录音条三态 |
 | 页面清单 | 13 页简表 | 13 页 + v5-vs-v6 差距表（黄色=待补） |
 | 验收清单 | 无 | §B 含 22 项可勾选 |
-| 部署版 | 无 | [`assets/PRD_v3.0_deploy.html`](./assets/PRD_v3.0_deploy.html) |
+| 部署版 | 无 | 无（HTML 部署版已删除收敛，仅此 md 单一事实源） |
 
 ## 附录 B：原型验收清单 (Definition of Done)
 
@@ -294,10 +290,10 @@
 - [ ] 红绿灯按钮：关闭按钮 → 最小化到菜单栏 (不退出进程)
 
 ### B.2 配置与设置 (P1)
-- [ ] 模型配置页：8 个平台卡片 + 新增/编辑/测试连接全流程（原型见 [`prototypes/v6-spa/`](./prototypes/v6-spa/) Tab I；字段级规格待 `pages-specs/` 建立，T-012）
+- [ ] 模型配置页：8 个平台卡片 + 新增/编辑/测试连接全流程（原型见 [`prototypes/v7-spa/`](./prototypes/v7-spa/) Tab I；字段级规格待 `pages-specs/` 建立，T-012）
 - [ ] 快捷键设置：重绑 + 冲突检测（微信截图 Ctrl+Alt+A 等）
 - [ ] 术语表：CSV 导入 + 编辑 + 应用范围选择
-- [ ] Skills 模板：会议纪要 / 邮件 / 营销文案 三套示例
+- [ ] Skills 模板：会议纪要 / 工作汇报 / 项目进度 / 营销文案 / 邮件润色 / Vibe-Coding 提示词 六场景（对齐 Chatterfly）
 - [ ] 历史与用量：按天/周/月统计 token 与预估花费
 
 ### B.3 系统与边界 (P0)
@@ -322,7 +318,7 @@
 
 - 决策记录：[`decisions/001`](./decisions/001-byok-not-managed.md) BYOK · [002](./decisions/002-buyout-not-subscription.md) 买断 · [003](./decisions/003-five-platform-incl-linux.md) 五端 · [004](./decisions/004-flutter-native-bridge.md) Flutter+原生桥 · [005](./decisions/005-macos-menubar-pattern.md) 菜单栏 · [006](./decisions/006-prototype-spa-app.md) SPA · [007](./decisions/007-provider-interface.md) Provider 接口 · [008](./decisions/008-recorder-bar-three-states.md) 三态并列
 - 竞品分析：[`competitors/`](./competitors/)（Typeless / Chatterfly / Bob）+ [`docs/competitor-research/`](./docs/competitor-research/)（T-014 4 家调研）
-- 原型落地：[`prototypes/v6-spa/`](./prototypes/v6-spa/)（13 页全量）· [`prototypes/v5-spa/`](./prototypes/v5-spa/)（7/13 留档）
+- 原型落地：[`prototypes/v7-spa/`](./prototypes/v7-spa/)（13 页全量·成稿范式，唯一现行；v1/v5/v6 已删除收敛）
 - 页面规格：[`pages-specs/`](./pages-specs/)（按 PRD §6 编号的字段级规格，**目录待建**，T-012）
 - 实施计划：[`roadmap.md`](./roadmap.md)
 - 进度真相源：[`docs/CONTEXT.md`](./docs/CONTEXT.md)

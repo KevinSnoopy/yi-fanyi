@@ -81,13 +81,14 @@ has_code: false
 - **delegated subagent 写文件用沙盒隔离**，交付物必须由主 agent 重新落库
 - **不要重复已有产品的截图到 README 正文**——独立存 `screenshots/` 子目录，正文引用路径
 - **PRD 写作铁律**（[ADR-005..008](../decisions/) 期间总结）：PRD 仅含产品需求（§1-9）；商业模式→对应 ADR；风险→`roadmap.md` §风险；决策记录→`decisions/`
-- **原型落地规范**：现行 v7 SPA 在 [`prototypes/v7-spa/`](../prototypes/v7-spa/)（3 文件，Tab A–M 13 页全量 + 成稿范式 + 走查面板）；v6/v5 留档；PRD 部署版在 [`assets/PRD_v3.0_deploy.html`](../assets/PRD_v3.0_deploy.html)；13 页对照表见 [`prototypes/README.md`](../prototypes/README.md)
+- **原型落地规范**：**唯一现行** v7 SPA 在 [`prototypes/v7-spa/`](../prototypes/v7-spa/)（3 文件，Tab A–M 13 页全量 + 成稿范式 + 走查面板）；**v1/v5/v6 原型与 v2.0 PRD、assets 部署版已按用户要求删除收敛，不得重建旧版副本**；13 页对照表见 [`prototypes/README.md`](../prototypes/README.md)
+- **单一事实源铁律**：PRD 仅 `PRD_v3.0.md` 一份、原型仅 `prototypes/v7-spa/` 一套（2026-09-26 用户拍板）；历史回执与 ADR 中出现的旧路径（PRD_v2.0.md / v5-spa / v6-spa / assets/PRD_v3.0_deploy.html）均为历史引用，git 历史（`7442094` 之前）可溯
 - **原型 JS 约定**：演示延时一律走 `schedule()`（playTimers 集合统一清理），禁止裸 `setTimeout` 存回单个变量——v5 的孤儿 timer 竞态就是这么来的（会话 07 修复）
 
 ## 7. 给下一个 Agent 的速读路径
 
-1. 读 [`PRD_v3.0.md`](../PRD_v3.0.md)（产品需求最新版 v3.2；v2.0 保留为基线）
-2. 读 [`prototypes/README.md`](../prototypes/README.md)（v7 13 页对照表 + 成稿范式改动点 + 走查路径 + Design Token）
+1. 读 [`PRD_v3.0.md`](../PRD_v3.0.md)（**唯一 PRD**，最新 v3.2；v2.0 已删除收敛）
+2. 读 [`prototypes/README.md`](../prototypes/README.md)（**唯一原型** v7 的 13 页对照表 + 成稿范式改动点 + 走查路径 + Design Token）
 3. 读 [`competitor-research/README.md`](./competitor-research/README.md)（T-014 调研结论）与 [`competitors/chatterfly.md`](../competitors/chatterfly.md)、[`competitors/typeless.md`](../competitors/typeless.md)（2026 实况情报）
 4. 读 [`2026-09-26-04-t010-retro.md`](./sessions/2026-09-26-04-t010-retro.md)（T-010 复盘，避免重蹈覆辙）
 5. 读 [`2026-09-26-06-prd-v3-push.md`](./sessions/2026-09-26-06-prd-v3-push.md)（v3.0 拆分 + v5 SPA 落地说明）

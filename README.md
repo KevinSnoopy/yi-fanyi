@@ -22,8 +22,7 @@
 - [`competitors/`](./competitors/) — 竞品分析（Typeless / Chatterfly / Bob）
 - [`docs/competitor-research/`](./docs/competitor-research/) — Typeless / Wispr Flow / Spokenly / MacWhisper 设计调研（T-014）
 - [`decisions/`](./decisions/) — 8 个关键产品决策 ADR（001–008）
-- [`prototypes/`](./prototypes/) — 设计原型（现行 `v7-spa/` 13 页全量·成稿范式；`v6-spa/`、`v5-spa/` 留档；v1 作废）
-- [`assets/`](./assets/) — PRD 部署版 HTML + 原始 docx 备份
+- [`prototypes/`](./prototypes/) — 设计原型（**唯一现行** `v7-spa/` 13 页全量·成稿范式）
 - [`AGENTS.md`](./AGENTS.md) — 协作入口（参与开发的 Agent 必读）
 - [`docs/`](./docs/) — 进度快照 `CONTEXT.md`、任务池 `TASKS.md`、约定与会话回执
 
