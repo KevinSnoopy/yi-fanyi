@@ -41,6 +41,8 @@
 | T-013 | Design Token 落地（浅/深主题 + 组件规格） | ⬜ | T-014 | Token 表与新版口径一致，组件覆盖 ①–⑥ | PRD §5 |
 | T-014 | Typeless + Wispr Flow + Spokenly + MacWhisper 官网设计调研 | ✅ 2026-09-26 | — | 覆盖 4 家（超出原 Typeless+Chatterfly 计划）；HTML+CSS 提取 + 9 张截图 + vision 分析。**回执** [`2026-09-26-05-t014-research.md`](./sessions/2026-09-26-05-t014-research.md)，**主文档** [`competitor-research/README.md`](./competitor-research/README.md) | docs/competitor-research/ |
 | T-015 | 按用户新口径重做原型（语音为主 / 翻译可选） | ⬜ | T-014 + 用户口径 | 录音条形态 A/B/C、翻译开关位置、原型形态（HTML / Flutter）由用户决定 | — |
+| T-016 | PRD v3.0 + ADR-005~008 + v5 SPA 原型 push 到 GitHub | ✅ 2026-09-26 | T-014 | PRD v3.0 拆分合规 + 4 个新 ADR + v5 SPA 落 `prototypes/v5-spa/` + 部署版 HTML 落 `assets/`。**回执** [`2026-09-26-06-prd-v3-push.md`](./sessions/2026-09-26-06-prd-v3-push.md) | `PRD_v3.0.md` + `decisions/005-008/` + `prototypes/v5-spa/` |
+| T-017 | v6 完整 13 页原型（v5 基础上扩 6 个 tab） | ⬜ | T-016 + v5 用户验收 | v5 已实现 7/13 tab，v6 补主窗首页 / 模型配置 / 快捷键 / 翻译偏好+术语+Skills / 首次引导 / 托盘菜单栏 6 项 | `prototypes/v6-spa/` |
 
 ## Phase 2 · macOS MVP
 
