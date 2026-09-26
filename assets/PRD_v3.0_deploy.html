@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>译语 · PRD v3.1</title>
+<title>译语 · PRD v3.2</title>
 <style>
   :root {
     --brand: #4F7CFF;
@@ -209,13 +209,13 @@
     <h1>译语 · 产品需求文档</h1>
     <div class="sub">LinguaFlow · 全平台 BYOK AI 语音翻译键盘</div>
     <div class="badges">
-      <span class="badge">PRD v3.1</span>
+      <span class="badge">PRD v3.2</span>
       <span class="badge">2026-09-26</span>
       <span class="badge">五平台覆盖</span>
       <span class="badge">BYOK</span>
       <span class="badge">隐私优先</span>
     </div>
-    <div class="meta">v3.1 整理修订（2026-09-26）：修正验收清单计数、失效引用；§6 页面清单 v6 列已随 v6-spa 原型补齐而更新</div>
+    <div class="meta">v3.2 定位对齐（2026-09-26）：参考 Typeless + Chatterfly，成稿为主、翻译降为开关；流程 A 重写；Skills 对齐六场景；§5.1 录音条改 pill</div>
   </header>
 
   <nav class="toc">
@@ -245,12 +245,14 @@
     <tr><td>v1.0</td><td>初稿</td><td>全平台 AI 翻译输入方案初稿</td><td>用户原始需求</td></tr>
     <tr><td>v2.0</td><td>Kimi 迭代</td><td>吸收 Typeless 竞品分析、加入 6 大流程 + 13 页原型清单</td><td>Kimi 给出 PRD v2 + Typeless 推荐链接情报</td></tr>
     <tr><td>v3.0</td><td>2026-09-26</td><td>补 Design Token 表、决策记录(ADR-005~008)、页面覆盖度差距表、验收清单 22 项（字段级规范下沉至 pages-specs/ 待建 T-012）</td><td>v5 原型实施后盘点缺口</td></tr>
-    <tr class="gap-row"><td><strong>v3.1</strong></td><td>2026-09-26</td><td><strong>整理修订：验收清单计数修正（22 项）、失效 pages-specs 引用改待建标注、§6 页面清单 v6 列更新（v6-spa 补齐 6 页）</strong></td><td><strong>v6 原型落地后的文档对齐</strong></td></tr>
+    <tr><td>v3.1</td><td>2026-09-26</td><td>整理修订：验收清单计数修正（22 项）、失效 pages-specs 引用改待建标注、§6 页面清单 v6 列更新（v6-spa 补齐 6 页）</td><td>v6 原型落地后的文档对齐</td></tr>
+    <tr class="gap-row"><td><strong>v3.2</strong></td><td>2026-09-26</td><td><strong>定位对齐（T-015 拍板：参考 Typeless + Chatterfly）：§1.1 成稿为主翻译为开关、§2 流程 A 重写、§1.4 竞对表更新、§3 加翻译开关/成稿/Skill 六场景、§5.1 录音条改 pill、§6 加 v7 原型列</strong></td><td><strong>用户拍板产品参考系</strong></td></tr>
   </table>
 
   <h2 id="overview">1. 产品概述</h2>
   <h3>1.1 一句话定位</h3>
-  <blockquote>按住说话（或打一句话），译文自动落进你正在输入的地方——用你自己的模型 Key，离线也能用。</blockquote>
+  <blockquote>按住说话，AI 把你的话润色成书面文稿，直接写进你正在输入的任何地方——翻译只是开关之一，用你自己的模型 Key，离线也能用。</blockquote>
+  <blockquote><strong>定位口径（2026-09-26 用户拍板）</strong>：参考 Typeless（Dictate→Translate→Ask 序列）与 Chatterfly（开口即成稿、无翻译流程）——语音成稿是主链路，翻译是 feature 之一。</blockquote>
 
   <h3>1.2 三大支柱</h3>
   <ol>
@@ -270,33 +272,36 @@
   <h3>1.4 竞争对位</h3>
   <table>
     <tr><th>维度</th><th>Typeless</th><th>Chatterfly</th><th>Bob</th><th><strong>译语</strong></th></tr>
-    <tr><td>核心形态</td><td>语音键盘→润色成稿</td><td>语音输入→混元润色</td><td>划词/截图翻译</td><td><strong>语音+文本翻译输入</strong></td></tr>
-    <tr><td>平台</td><td>macOS/Win/iOS/Android</td><td>macOS/Win</td><td>仅 macOS</td><td><strong>五平台全覆盖</strong></td></tr>
-    <tr><td>BYOK</td><td>❌</td><td>❌</td><td>部分插件</td><td>✅ <strong>任意平台</strong></td></tr>
+    <tr><td>核心形态</td><td>语音键盘→润色成稿（Dictate 主功能，Translate 第 2）</td><td>语音→混元润色「开口即成稿」，六场景 Skill，无翻译流程</td><td>划词/截图翻译</td><td><strong>语音成稿为主 + 翻译开关 + 场景 Skill</strong></td></tr>
+    <tr><td>平台</td><td>macOS/Win/iOS/Android（iOS 2025-12 起）</td><td>macOS/Win 内测（2026-09 起）</td><td>仅 macOS</td><td><strong>五平台全覆盖</strong></td></tr>
+    <tr><td>BYOK</td><td>❌</td><td>❌（锁定混元）</td><td>部分插件</td><td>✅ <strong>任意平台</strong></td></tr>
     <tr><td>离线/本地模型</td><td>❌ 纯云端</td><td>❌</td><td>❌</td><td>✅ <strong>Ollama/端侧</strong></td></tr>
-    <tr><td>隐私</td><td>采集周边文本</td><td>录音本地</td><td>本地</td><td><strong>零采集、全本地</strong></td></tr>
-    <tr><td>价格</td><td>$12–30/月订阅</td><td>免费</td><td>买断 ¥50</td><td><strong>买断制 + 免费版</strong></td></tr>
+    <tr><td>隐私</td><td>宣称 zero cloud retention（2026 姿态，待实测）</td><td>录音/转写默认本机（润色链路待验证）</td><td>本地</td><td><strong>零采集、全本地</strong></td></tr>
+    <tr><td>价格</td><td>Free 8k 词/周 + Pro $12–30/月</td><td>免费（内测期）</td><td>买断 ¥50</td><td><strong>买断制 + 免费版</strong></td></tr>
   </table>
 
   <h2 id="flows">2. 核心使用流程 (六大流程)</h2>
 
-  <h3>流程 A：按住说话 → 译文落框 <span class="pill p0">P0</span></h3>
-  <p><strong>场景</strong>：用户在 WhatsApp/Telegram/邮件里给外国客户发消息</p>
+  <h3>流程 A：按住说话 → 润色成稿落框 <span class="pill p0">P0</span></h3>
+  <p><strong>场景</strong>：在任何输入框——微信/Slack 给同事发消息、写邮件、记纪要。默认<strong>同语言成稿</strong>（口语进、书面语出）；打开<strong>翻译开关</strong>后写入目标语言（可配双语）</p>
   <pre><code>① 光标在任意输入框
-② 按住 Fn（默认，可改）→ 屏幕底部浮出细录音条（波形动画 + 计时）
-   说中文："那个报价我确认没问题，下周三之前可以签合同"
-③ 松开 Fn → 录音条变"转写/翻译中"状态条（显示已输出字符数）
+② 按住 Fn（默认，可改）→ 浮出 Typeless 式 pill 录音条（波形动画 + 计时）
+   说中文（口语）："那个报价我确认没问题啊，就下周三之前吧，咱们把合同签了"
+③ 松开 Fn → pill 变"成稿中"状态（显示已输出字符数）
    - 语音转写（本地 Whisper 或用户配置的 STT API）
-   - 自动去口头禅、补标点、按语境成稿
-   - 翻译成目标语言，流式输出
-④ 状态条预览译文 1.2 秒（可点展开编辑）→ 自动写入输入框并消失
+   - AI 润色成稿：自动去口头禅、补标点、梳理逻辑，按当前 App 语境调整语气
+   - 翻译开关关闭（默认）：成稿即最终文本
+   - 翻译开关打开：成稿 → 翻译成目标语言，流式输出
+④ 状态条预览 1.2 秒（可点展开编辑）→ 自动写入输入框并消失
    Esc 随时取消</code></pre>
   <p><strong>关键规则</strong>：</p>
   <ul>
+    <li><strong>默认成稿，翻译是开关</strong>：录音条右侧常驻翻译开关（默认关），开启后 pill 显示目标语言指示（如 中→EN）；写回内容可选「仅译文 / 双语」（偏好设置，默认仅译文）</li>
     <li>按住说话、松手成稿：过程中用户不离开当前应用，无悬浮窗打断</li>
     <li>预览期 1.2 秒 = "后悔窗口"；设置可改"直接写入"或"总是预览"</li>
     <li>长语音无 6 分钟硬上限（吸收 Typeless 痛点）</li>
-    <li>中途说错 → 继续说"不对，改成……" — 成稿引擎只保留最终意图</li>
+    <li>中途说错 → 继续说"不对，改成……" — 成稿引擎只保留最终意图（对齐 Typeless self-correction）</li>
+    <li>按当前 App 语境自适应语气（邮件书面 / IM 口语，对齐 Typeless per-app tone）</li>
   </ul>
 
   <h3>流程 B：悬浮窗输入翻译 <span class="pill p0">P0</span></h3>
@@ -372,7 +377,7 @@
       <ul>
         <li>迷你悬浮窗 380 × 自适应 (min 120 / max 480px 滚动)</li>
         <li>划词小窗 320 × 自适应</li>
-        <li>录音/状态条 280 × 32px，屏幕底部居中偏上 80px</li>
+        <li>录音条 <strong>Typeless 式 pill：160 × 36px</strong>，屏幕底部居中偏上 80px（闲置圆点 / 录音波形 / 处理旋转点 / 完成对勾；翻译开关为 pill 右侧延伸区）</li>
         <li>主窗口 960 × 640 (最小 720 × 480)</li>
       </ul>
     </li>
@@ -392,9 +397,9 @@
 
   <h3>5.3 核心组件规格</h3>
   <p><strong>① 录音/状态条 (最高频组件)</strong></p>
-  <pre><code>[◉●●● 波形]  00:07             ← 按住说话态：主色波形动画 + 计时
-[✕] 翻译中… 已输出 32 字  →     ← 处理态：可点展开、可取消、显示字数
-[✓] "Confirmed, we can sign…"   ← 预览态 1.2s 后自动写入</code></pre>
+  <pre><code>[◉ 波形  00:07  ○翻译开关]      ← 按住说话态：pill + 波形动画 + 计时 + 翻译开关（默认关）
+[✕] 成稿中… 已输出 32 字  →      ← 处理态：可点展开、可取消、显示字数（开关开时显示「翻译中」）
+[✓] "那个报价我确认没问题，下周三之前可以签合同。"   ← 预览态 1.2s（成稿文本；开关开时双语）</code></pre>
 
   <p><strong>② 迷你悬浮窗</strong></p>
   <pre><code>┌──────────────────────────────────────────┐
@@ -418,8 +423,8 @@
 
   <h2 id="pages">6. 页面清单 (13 页原型)</h2>
   <table>
-    <tr><th>#</th><th>页面</th><th>平台</th><th>v5 实现</th><th>v6 实现</th></tr>
-    <tr><td>1</td><td>录音条 (说话/处理/预览三态)</td><td>桌面</td><td>✅ Tab A</td><td>✅ Tab A</td></tr>
+    <tr><th>#</th><th>页面</th><th>平台</th><th>v5</th><th>v6</th><th>v7</th></tr>
+    <tr><td>1</td><td>录音条 (说话/处理/预览三态)</td><td>桌面</td><td>✅ Tab A</td><td>✅ Tab A</td><td>✅ Tab A（成稿范式 + 翻译开关 + pill）</td></tr>
     <tr><td>2</td><td>迷你悬浮窗 (空/加载/流式/失败)</td><td>桌面</td><td>✅ Tab B</td><td>✅ Tab B</td></tr>
     <tr><td>3</td><td>划词译文小窗</td><td>桌面</td><td>✅ Tab C</td><td>✅ Tab C</td></tr>
     <tr><td>4</td><td>静默状态条 + 焦点变化 toast</td><td>桌面</td><td>✅ Tab D</td><td>✅ Tab D</td></tr>
@@ -427,13 +432,13 @@
     <tr class="gap-row"><td>6</td><td>主窗口-首页 (历史 + 用量统计)</td><td>桌面</td><td>❌ 缺</td><td><strong>✅ Tab H</strong></td></tr>
     <tr class="gap-row"><td>7</td><td>模型配置 (列表/新增/测试连接)</td><td>全端</td><td>❌ 缺</td><td><strong>✅ Tab I</strong></td></tr>
     <tr class="gap-row"><td>8</td><td>快捷键设置 (冲突检测态)</td><td>桌面</td><td>❌ 缺</td><td><strong>✅ Tab J</strong></td></tr>
-    <tr class="gap-row"><td>9</td><td>翻译偏好 / 术语表 / Skills</td><td>全端</td><td>❌ 缺</td><td><strong>✅ Tab K</strong></td></tr>
+    <tr class="gap-row"><td>9</td><td>翻译偏好 / 术语表 / Skills</td><td>全端</td><td>❌ 缺</td><td><strong>✅ Tab K</strong></td><td>✅ Tab K（Skills 扩六场景）</td></tr>
     <tr class="gap-row"><td>10</td><td>首次引导三步 + 权限引导</td><td>全端</td><td>❌ 缺</td><td><strong>✅ Tab L</strong></td></tr>
     <tr><td>11</td><td>移动端 App 主页 + 隐私锁</td><td>移动</td><td>部分 (Tab F)</td><td><strong>✅ Tab M（主页）+ Tab F（锁）</strong></td></tr>
     <tr><td>12</td><td>移动端键盘 (工具条/候选流)</td><td>移动</td><td>✅ Tab G</td><td>✅ Tab G</td></tr>
     <tr class="gap-row"><td>13</td><td>托盘/菜单栏菜单</td><td>桌面</td><td>部分 (Popover)</td><td><strong>✅ Popover 补全（最近译文 + 复制/注入）</strong></td></tr>
   </table>
-  <p>v6 原型（13/13 全量）：<code>prototypes/v6-spa/</code>；v5（7/13，留档）：<code>prototypes/v5-spa/</code></p>
+  <p><strong>v7 原型（13/13，现行，定位对齐 Typeless/Chatterfly）</strong>：<code>prototypes/v7-spa/</code>；v6（13/13，留档）：<code>prototypes/v6-spa/</code>；v5（7/13，留档）：<code>prototypes/v5-spa/</code></p>
 
   <h2 id="exceptions">7. 异常与边界</h2>
   <table>
