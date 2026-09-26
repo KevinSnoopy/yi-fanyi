@@ -7,10 +7,11 @@
 
 | 项 | 内容 |
 |---|---|
-| **版本** | v3.0 |
+| **版本** | v3.1（v3.x 系列文件名沿用 `PRD_v3.0.md`） |
 | **日期** | 2026-09-26 |
 | **上一版本** | v2.0（[PRD_v2.0.md](./PRD_v2.0.md)） |
-| **v3.0 相对 v2.0 变化** | 补 13 页字段级规范、Design Token 表、流程编号沿用、验收清单 24 项；决策事项已下沉到 [`decisions/`](./decisions/) ADR-005~008 |
+| **v3.1 相对 v3.0 变化** | 整理修订：验收清单计数修正（实为 22 项）、`pages-specs/` 失效引用改为待建标注（T-012 未建）、§6 页面清单 v6 列更新为已实现（[prototypes/v6-spa/](./prototypes/v6-spa/) 补齐 6 页）、附录 C 交叉引用同步 |
+| **v3.0 相对 v2.0 变化** | 补 Design Token 表、页面清单 13 页 v5/v6 差距表、验收清单 22 项可勾选；决策事项已下沉到 [`decisions/`](./decisions/) ADR-005~008（字段级规范见 `pages-specs/`，待建，T-012） |
 | **部署版** | [PRD v3.0 部署 HTML（在线阅读 + 勾选验收）](./assets/PRD_v3.0_deploy.html) |
 | **原始素材** | [`assets/PRD_v3.0_source.md`](./assets/PRD_v3.0_source.md)（合并版源档） |
 
@@ -206,23 +207,24 @@
 
 ## 6. 页面清单 (13 页原型)
 
-| # | 页面 | 平台 | 状态要求 | v5 实现 | v6 待补 |
+| # | 页面 | 平台 | 状态要求 | v5 实现 | v6 实现 |
 |---|---|---|---|---|---|
-| 1 | 录音条 (说话/处理/预览三态) | 桌面 | 核心组件，三态都要画 | ✅ Tab A | — |
-| 2 | 迷你悬浮窗 (空/加载/流式/失败) | 桌面 | 4 态都要画 | ✅ Tab B | — |
-| 3 | 划词译文小窗 | 桌面 | 选中态 + 译文态 | ✅ Tab C | — |
-| 4 | 静默状态条 + 焦点变化 toast | 桌面 | 进行中 + 焦点切换 | ✅ Tab D | — |
-| 5 | 截图 OCR 双栏窗 | 桌面 | 框选态 + 结果态 | ✅ Tab E | — |
-| 6 | 主窗口-首页 (历史 + 用量统计) | 桌面 | 列表 + 详情 | ❌ 缺 | **✅ 新增** |
-| 7 | 模型配置 (列表/新增/测试连接) | 全端 | 4 态 (空/已配/新增/测试中) | ❌ 缺 | **✅ 新增** |
-| 8 | 快捷键设置 (冲突检测态) | 桌面 | 已绑 + 冲突 + 重绑 | ❌ 缺 | **✅ 新增** |
-| 9 | 翻译偏好 / 术语表 / Skills | 全端 | 三个子页 | ❌ 缺 | **✅ 新增** |
-| 10 | 首次引导三步 + 权限引导 | 全端 | 三步流转 | ❌ 缺 | **✅ 新增** |
-| 11 | 移动端 App 主页 + 隐私锁 | 移动 | 主页 + FaceID 锁 | 部分 (Tab F) | **✅ 补全** |
-| 12 | 移动端键盘 (工具条/候选流) | 移动 | 工具条 + 译文流 | ✅ Tab G | — |
-| 13 | 托盘/菜单栏菜单 | 桌面 | macOS 范式 | 部分 (Popover) | **✅ 补全** |
+| 1 | 录音条 (说话/处理/预览三态) | 桌面 | 核心组件，三态都要画 | ✅ Tab A | ✅ Tab A |
+| 2 | 迷你悬浮窗 (空/加载/流式/失败) | 桌面 | 4 态都要画 | ✅ Tab B | ✅ Tab B |
+| 3 | 划词译文小窗 | 桌面 | 选中态 + 译文态 | ✅ Tab C | ✅ Tab C |
+| 4 | 静默状态条 + 焦点变化 toast | 桌面 | 进行中 + 焦点切换 | ✅ Tab D | ✅ Tab D |
+| 5 | 截图 OCR 双栏窗 | 桌面 | 框选态 + 结果态 | ✅ Tab E | ✅ Tab E |
+| 6 | 主窗口-首页 (历史 + 用量统计) | 桌面 | 列表 + 详情 | ❌ 缺 | ✅ Tab H |
+| 7 | 模型配置 (列表/新增/测试连接) | 全端 | 4 态 (空/已配/新增/测试中) | ❌ 缺 | ✅ Tab I |
+| 8 | 快捷键设置 (冲突检测态) | 桌面 | 已绑 + 冲突 + 重绑 | ❌ 缺 | ✅ Tab J |
+| 9 | 翻译偏好 / 术语表 / Skills | 全端 | 三个子页 | ❌ 缺 | ✅ Tab K |
+| 10 | 首次引导三步 + 权限引导 | 全端 | 三步流转 | ❌ 缺 | ✅ Tab L |
+| 11 | 移动端 App 主页 + 隐私锁 | 移动 | 主页 + FaceID 锁 | 部分 (Tab F) | ✅ Tab M（App 主页）+ Tab F（隐私锁） |
+| 12 | 移动端键盘 (工具条/候选流) | 移动 | 工具条 + 译文流 | ✅ Tab G | ✅ Tab G |
+| 13 | 托盘/菜单栏菜单 | 桌面 | macOS 范式 | 部分 (Popover) | ✅ Popover 补全（最近一条译文 + 复制/注入按钮，ADR-005） |
 
-**v5 原型落地**：[`prototypes/v5-spa/`](./prototypes/v5-spa/)（SPA App 化，详见 [ADR-006](./decisions/006-prototype-spa-app.md)）
+**v5 原型**（7/13，留档）：[`prototypes/v5-spa/`](./prototypes/v5-spa/)
+**v6 原型**（13/13 全量）：[`prototypes/v6-spa/`](./prototypes/v6-spa/)（v5 基础上扩 6 个 tab + Popover 补全，SPA 形态见 [ADR-006](./decisions/006-prototype-spa-app.md)）
 
 ---
 
@@ -267,7 +269,7 @@
 | 风险 | 未单列 | 已下沉 [`roadmap.md`](./roadmap.md) §风险 |
 | 决策记录 | 仅 ADR-001~004 | + ADR-005 菜单栏范式 / 006 原型 SPA / 007 Provider 接口 / 008 录音条三态 |
 | 页面清单 | 13 页简表 | 13 页 + v5-vs-v6 差距表（黄色=待补） |
-| 验收清单 | 无 | §B 含 24 项可勾选 |
+| 验收清单 | 无 | §B 含 22 项可勾选 |
 | 部署版 | 无 | [`assets/PRD_v3.0_deploy.html`](./assets/PRD_v3.0_deploy.html) |
 
 ## 附录 B：原型验收清单 (Definition of Done)
@@ -282,7 +284,7 @@
 - [ ] 红绿灯按钮：关闭按钮 → 最小化到菜单栏 (不退出进程)
 
 ### B.2 配置与设置 (P1)
-- [ ] 模型配置页：8 个平台卡片 + 新增/编辑/测试连接全流程（[pages-specs/07-model-config.md](./pages-specs/07-model-config.md)）
+- [ ] 模型配置页：8 个平台卡片 + 新增/编辑/测试连接全流程（原型见 [`prototypes/v6-spa/`](./prototypes/v6-spa/) Tab I；字段级规格待 `pages-specs/` 建立，T-012）
 - [ ] 快捷键设置：重绑 + 冲突检测（微信截图 Ctrl+Alt+A 等）
 - [ ] 术语表：CSV 导入 + 编辑 + 应用范围选择
 - [ ] Skills 模板：会议纪要 / 邮件 / 营销文案 三套示例
@@ -310,7 +312,7 @@
 
 - 决策记录：[`decisions/001`](./decisions/001-byok-not-managed.md) BYOK · [002](./decisions/002-buyout-not-subscription.md) 买断 · [003](./decisions/003-five-platform-incl-linux.md) 五端 · [004](./decisions/004-flutter-native-bridge.md) Flutter+原生桥 · [005](./decisions/005-macos-menubar-pattern.md) 菜单栏 · [006](./decisions/006-prototype-spa-app.md) SPA · [007](./decisions/007-provider-interface.md) Provider 接口 · [008](./decisions/008-recorder-bar-three-states.md) 三态并列
 - 竞品分析：[`competitors/`](./competitors/)（Typeless / Chatterfly / Bob）+ [`docs/competitor-research/`](./docs/competitor-research/)（T-014 4 家调研）
-- 原型落地：[`prototypes/v5-spa/`](./prototypes/v5-spa/)
-- 页面规格：[`pages-specs/`](./pages-specs/)（按 PRD §6 编号，待补）
+- 原型落地：[`prototypes/v6-spa/`](./prototypes/v6-spa/)（13 页全量）· [`prototypes/v5-spa/`](./prototypes/v5-spa/)（7/13 留档）
+- 页面规格：[`pages-specs/`](./pages-specs/)（按 PRD §6 编号的字段级规格，**目录待建**，T-012）
 - 实施计划：[`roadmap.md`](./roadmap.md)
 - 进度真相源：[`docs/CONTEXT.md`](./docs/CONTEXT.md)
