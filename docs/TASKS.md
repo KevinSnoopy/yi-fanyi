@@ -51,9 +51,9 @@
 | T-020 | Flutter 工程脚手架 + macOS 原生桥 | 🟡 Web 端 ✅；macOS 原生壳已落地待实机编译（10 会话） | T-011 | 空壳可运行，MethodChannel 打通 | ADR-004 |
 | T-021 | 流程 A：按住 Fn 说话 → 成稿（默认）→ 翻译（开关开时）→ 写回 | ✅ 2026-09-27 | T-020 | Key 进 SecureStore（Profile 只留 keyRef）、真实 testConnection/fetchModels、真实 SSE 流式成稿、失败内联错误条 + 一键降级演示流式；44 项单测 + widget 端到端全绿 | PRD v3.2 §2.1 · ADR-001/007 |
 | T-022 | 流程 B / C / D：悬浮窗、划词、静默替换 | ✅ 2026-09-27（双落地：原生 system / 应用内 inApp） | T-020 | `SystemTriggerService` 双落地 + B 悬浮窗真实输入流式、C 原生选区优先、D 焦点变化即 abort；桌面原生壳已实现待实机验证 | PRD §2.2–2.4 · §4 规则 3 |
-| T-023 | 模型配置页（灵魂页面） | 🟡 四态表单 + 内联错误 UI 完成；三套真连接待 | T-020 | OpenAI + 自定义 BaseURL + Ollama 三套跑通 | PRD §5.3 ④ |
+| T-023 | 模型配置页（灵魂页面） | ✅ 2026-09-27（三套真连接全链 + 4 错误态；桌面端待实机） | T-020 | OpenAI + 自定义 BaseURL + Ollama 三套跑通 | PRD §5.3 ④ |
 | T-024 | 全局热键 + 冲突检测 | ✅ 2026-09-27（Dart 侧 ✅；原生注册待实机） | T-020 | `HotkeyCombo` 结构化组合键 + `kReservedCombos` 三平台占用表 + 真实重绑录制 + 注册报告；macOS Carbon `RegisterEventHotKey` 已实现 | PRD §4 |
-| T-025 | 首次引导三步 + 权限引导 | 🟡 五态向导 UI 完成；真实权限引导待桌面端 | T-020 | 零 Key 可完成本地模型试用体验 | PRD §5.3 ⑥ |
+| T-025 | 首次引导三步 + 权限引导 | ✅ 2026-09-27（真实权限自检 + 零 Key 全链；桌面端待实机） | T-020 | 零 Key 可完成本地模型试用体验 | PRD §5.3 ⑥ |
 
 ## Phase 3+ · 多端与商业化
 
@@ -73,3 +73,4 @@
 - 2026-09-26：仓库收敛为单 PRD（`PRD_v3.0.md`）+ 单原型（`prototypes/v7-spa/`），v1/v5/v6 原型、`PRD_v2.0.md`、`assets/` 三件删除（用户指令：避免多 Agent 干扰）；历史任务行关联列已标注删除状态
 - 2026-09-26：会话 09 —— T-020 ✅（Web 端）Flutter 工程 13 页全量落地 + 冒烟通过；T-021/T-023/T-025 转 🟡（Mock/UI 就绪，真实联调待）
 - 2026-09-27：会话 10 —— T-021 ✅ / T-022 ✅ / T-024 ✅（Dart 侧）：真实 Provider 联调（Key→SecureStore、真实 SSE 成稿）、B/C/D 系统触发双落地、结构化热键 + 冲突检测 + macOS 原生壳（Carbon/AX/Keychain/NSPanel/StatusBar 六文件）。**回执** [`2026-09-27-01-t021-t022-t024-real-links.md`](./sessions/2026-09-27-01-t021-t022-t024-real-links.md)。`flutter analyze` 0 issue、`flutter test` 44/44、web release ✓、冒烟 15/15 PASS 0 错误；**遗留：Swift 原生壳未实机编译（Linux 沙箱无 macOS SDK）**
+- 2026-09-27：会话 11 —— T-023 ✅ / T-025 ✅：模型配置页三套真连接（OpenAI 官方 / 自定义 BaseURL / Ollama 本地，各自跑通「填 Key → 测试连接 → 拉取模型 → 成稿一次」）+ 401/429/model-not-found/wrong-BaseURL 四内联错误态；首次引导接真实权限状态（自检→打开设置→resumed 自动刷新）+ 零 Key Ollama 全链。顺带修复：4 个 provider 的 `listModels()` 裸抛 SocketException → 收敛 `networkUnreachable`（ADR-007）；Ollama 落库平台名归一化「Ollama（本地）」；零 Key 成功文案不再误提 Key。`flutter analyze` 0 issue、`flutter test` 66/66、web release ✓、冒烟 15/15 PASS 0 错误、Playwright 交互截图 14 张（I/L 页真实链路 + 内联错误态，fake Ollama 双栈 server 真连 132ms/116ms）。**回执** [`2026-09-27-02-t023-t025-real-connections-onboarding.md`](./sessions/2026-09-27-02-t023-t025-real-connections-onboarding.md)；**遗留：macOS Swift 原生壳未实机编译**

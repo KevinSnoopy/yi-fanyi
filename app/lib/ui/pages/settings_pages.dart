@@ -169,6 +169,12 @@ class _ProvidersPageState extends State<ProvidersPage> {
   List<String> _models = const [];
   String? _modelError;
 
+  // T-023 成稿试一句态（真实链路：流式增量 → 面板展示；失败内联错误）
+  bool _draftTesting = false;
+  String _draftOutput = '';
+  String? _draftError;
+  int? _draftMs;
+
   @override
   void initState() {
     super.initState();
@@ -286,6 +292,134 @@ class _ProvidersPageState extends State<ProvidersPage> {
   static String _clip(String s, int n) =>
       s.length <= n ? s : '${s.substring(0, n)}…';
 
+  /// T-023 · 「成稿试一句」真实链路：流式增量拼进面板；失败内联展示错误码
+  /// + 模型方原始返回（401 / 429 / model_not_found / networkUnreachable）。
+  Future<void> _draftOnce({
+    required String platform,
+    required String baseUrl,
+    required String model,
+    String? apiKey,
+  }) async {
+    if (_draftTesting) return;
+    if (baseUrl.isEmpty || model.isEmpty) {
+      setState(() {
+        _draftError = 'config · BaseURL / 模型不能为空，先补全表单';
+        _draftOutput = '';
+        _draftMs = null;
+      });
+      return;
+    }
+    setState(() {
+      _draftTesting = true;
+      _draftOutput = '';
+      _draftError = null;
+      _draftMs = null;
+    });
+    final sw = Stopwatch()..start();
+    try {
+      await for (final chunk
+          in widget.store.draftTestOnce(platform: platform, baseUrl: baseUrl, model: model, apiKey: apiKey)) {
+        if (!mounted) return;
+        setState(() => _draftOutput += chunk);
+      }
+      sw.stop();
+      if (!mounted) return;
+      setState(() {
+        _draftTesting = false;
+        _draftMs = sw.elapsedMilliseconds;
+      });
+      ServiceScope.maybeOf(context)?.toasts.show('成稿成功 · $platform · ${sw.elapsedMilliseconds}ms');
+    } on LfProviderException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _draftTesting = false;
+        _draftError = '${e.code.name}（HTTP ${e.httpStatus ?? '-'}）· ${_clip(e.detail, 200)}';
+      });
+      ServiceScope.maybeOf(context)?.toasts.show('成稿失败 · ${e.code.name}');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _draftTesting = false;
+        _draftError = _clip(e.toString(), 200);
+      });
+    }
+  }
+
+  /// 列表页：对指定已保存 Profile 成稿试一句（Key 从 SecureStore 读取）。
+  Future<void> _draftFromProfile(ProviderProfile p) async {
+    final key = await widget.store.readKey(p);
+    if (!mounted) return;
+    await _draftOnce(platform: p.platform, baseUrl: p.baseUrl, model: p.model, apiKey: key);
+  }
+
+  /// 成稿试一句结果面板（列表页 / 表单页共用）。
+  Widget _draftPanel(String sourceLabel) {
+    final s = LfScheme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(top: 6),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: _draftError != null
+            ? s.error.withValues(alpha: 0.08)
+            : s.bgSource,
+        borderRadius: BorderRadius.circular(LfDimens.rCard),
+        border: Border.all(
+          color: _draftError != null ? s.error.withValues(alpha: 0.5) : s.divider,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (_draftTesting) ...[
+                const LfSpinner(size: 10),
+                const SizedBox(width: 7),
+                Text(
+                  '成稿中…（真实流式 · $sourceLabel）',
+                  style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text2),
+                ),
+              ] else ...[
+                LfIcons.icon(
+                  _draftError != null ? 'warn' : 'check',
+                  size: 12,
+                  color: _draftError != null ? s.error : s.success,
+                ),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    _draftError != null
+                        ? '成稿失败 · 真实链路报错（未降级，如实展示）'
+                        : '成稿完成 · $sourceLabel · ${_draftMs ?? 0}ms · ${_draftOutput.length} 字',
+                    style: TextStyle(
+                      fontSize: LfDimens.fs2xs,
+                      fontWeight: FontWeight.w600,
+                      color: _draftError != null ? s.error : s.success,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (_draftOutput.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              _draftOutput,
+              style: TextStyle(fontSize: LfDimens.fsXs, color: s.text, height: 1.6),
+            ),
+          ],
+          if (_draftError != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              '模型方返回：$_draftError',
+              style: TextStyle(fontSize: LfDimens.fs2xs, color: s.error, height: 1.5),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = LfScheme.of(context);
@@ -328,6 +462,35 @@ class _ProvidersPageState extends State<ProvidersPage> {
               else if (effectiveView == 1) ...[
                 const SectionTitle('当前默认'),
                 _CurrentModelRow(store: widget.store),
+                // T-023 · 对当前默认模型真实成稿一次（完整链路验证）
+                Builder(
+                  builder: (context) {
+                    final p = widget.store.defaultProfile;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            LfButton(
+                              label: _draftTesting ? '成稿中…' : '▶ 成稿试一句（真实链路）',
+                              icon: 'sparkles',
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              onPressed: p == null || _draftTesting ? null : () => _draftFromProfile(p),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '用下方「已添加」当前默认模型跑一次流式成稿',
+                              style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text3),
+                            ),
+                          ],
+                        ),
+                        if (_draftTesting || _draftOutput.isNotEmpty || _draftError != null)
+                          _draftPanel(p == null ? '—' : '${p.platform} · ${p.model}'),
+                      ],
+                    );
+                  },
+                ),
                 const SectionTitle('已添加的 Provider'),
                 Column(
                   children: [
@@ -362,29 +525,51 @@ class _ProvidersPageState extends State<ProvidersPage> {
                   hint: 'OpenAI 兼容协议；流量直连该地址，零遥测（ADR-001 §2）',
                   child: TextField(controller: _baseUrl, style: const TextStyle(fontSize: LfDimens.fsBase)),
                 ),
-                const SizedBox(height: 12),
-                FormFieldRow(
-                  label: 'API Key',
-                  requiredField: true,
-                  hint: '存入系统密钥串（Keychain / DPAPI / libsecret），明文不落盘 · 各平台申请链接见「首次引导」',
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _key,
-                          obscureText: _obscure,
-                          style: const TextStyle(fontSize: LfDimens.fsBase),
+                if (_needsKey) ...[
+                  const SizedBox(height: 12),
+                  FormFieldRow(
+                    label: 'API Key',
+                    requiredField: true,
+                    hint: '存入系统密钥串（Keychain / DPAPI / libsecret），明文不落盘 · 各平台申请链接见「首次引导」',
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _key,
+                            obscureText: _obscure,
+                            style: const TextStyle(fontSize: LfDimens.fsBase),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      LfButton(
-                        label: _obscure ? '显示' : '隐藏',
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        onPressed: () => setState(() => _obscure = !_obscure),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        LfButton(
+                          label: _obscure ? '显示' : '隐藏',
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          onPressed: () => setState(() => _obscure = !_obscure),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ] else ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: s.success.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(LfDimens.rInput),
+                      border: Border.all(color: s.success.withValues(alpha: 0.35)),
+                    ),
+                    child: Row(
+                      children: [
+                        LfIcons.icon('check', size: 12, color: s.success),
+                        const SizedBox(width: 7),
+                        Text(
+                          '本地模型 · 无需 API Key，数据不出本机',
+                          style: TextStyle(fontSize: LfDimens.fsXs, color: s.success),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 12),
                 FormFieldRow(
                   label: '模型',
@@ -439,6 +624,32 @@ class _ProvidersPageState extends State<ProvidersPage> {
                           ],
                         ),
                       ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // T-023 · 成稿验证：测试连接只验证端点+鉴权，这一步验证完整成稿链路
+                FormFieldRow(
+                  label: '成稿验证（真实链路）',
+                  hint: '用上方 BaseURL + Key + 模型真实流式成稿一句；模型名不存在 / 鉴权失败会原样报错',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      LfButton(
+                        label: _draftTesting ? '成稿中…' : '▶ 成稿试一句',
+                        kind: LfButtonKind.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        onPressed: _draftTesting
+                            ? null
+                            : () => _draftOnce(
+                                  platform: kPlatformCatalog[selectedPlat].name,
+                                  baseUrl: _baseUrl.text.trim(),
+                                  model: _model.text.trim(),
+                                  apiKey: _key.text.trim(),
+                                ),
+                      ),
+                      if (_draftTesting || _draftOutput.isNotEmpty || _draftError != null)
+                        _draftPanel('${kPlatformCatalog[selectedPlat].name} · ${_model.text.trim()}'),
                     ],
                   ),
                 ),

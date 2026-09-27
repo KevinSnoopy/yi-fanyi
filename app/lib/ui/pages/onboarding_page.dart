@@ -1,12 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart' hide Badge;
 
 import '../../core/icons/lf_icons.dart';
 import '../../core/theme/tokens.dart';
 import '../../models/models.dart';
 import '../../providers/catalog.dart';
+import '../../providers/provider.dart';
+import '../../services/app_store.dart';
+import '../../services/service_scope.dart';
 import '../components/cards.dart';
 import '../components/common.dart';
 import '../overlays/floating_windows.dart';
+import '../overlays/recorder_pill.dart' show LfSpinner;
 import 'flow_demos.dart';
 import 'flow_page.dart' show HostTitleBar;
 
@@ -220,8 +226,14 @@ class _Countdown extends StatelessWidget {
 }
 
 // ==================================================================
-// L 页 · 首次引导 —— PRD §6 #10（原型 Tab L 五态向导，B.3 验收项）
-// 选平台 → 填 Key（可跳过走本地试用）→ 设热键 → 权限引导 → 完成
+// L 页 · 首次引导 —— PRD §6 #10（原型 Tab L 五态向导）
+//
+// T-025 · 三步向导接真实状态：
+// - 填 Key：真实 testConnection → addProfileWithKey（Key 进 SecureStore）
+// - 本地试用：Ollama 平台零 Key 可完整走完向导（本地模型无需授权）
+// - 权限引导：真实 permissionStatus 自检（辅助功能 / 输入监控）→
+//   openPermissionSettings 拉起系统设置 → 回到应用（lifecycle resumed）
+//   自动重新自检刷新 UI；Web 预览无原生桥时如实标注并允许跳过
 // ==================================================================
 class OnboardingPage extends FlowDemoPage {
   const OnboardingPage({super.key, required super.store});
@@ -236,8 +248,23 @@ class OnboardingPage extends FlowDemoPage {
   State<FlowDemoPage> createState() => _OnboardingPageState();
 }
 
-class _OnboardingPageState extends State<OnboardingPage> with FlowDemoStateMixin {
-  int selectedPlat = 5;
+class _OnboardingPageState extends State<OnboardingPage>
+    with FlowDemoStateMixin, WidgetsBindingObserver {
+  int selectedPlat = 5; // 默认 Ollama 本地（零 Key 体验）
+
+  final _keyCtl = TextEditingController();
+  final _baseUrlCtl = TextEditingController();
+  final _modelCtl = TextEditingController();
+
+  // 填 Key 步真实态
+  bool _testing = false;
+  bool _checkingLocal = false;
+  ConnectionTestResult? _testResult;
+  ProviderProfile? _savedProfile;
+
+  // 权限步真实态（macOS：accessibility / inputMonitoring；Web 预览为空 map）
+  Map<String, bool> _perms = const {};
+  bool _permChecking = false;
 
   @override
   List<String> get stateLabels => const ['选平台', '填 Key', '设热键', '权限引导', '完成'];
@@ -245,11 +272,179 @@ class _OnboardingPageState extends State<OnboardingPage> with FlowDemoStateMixin
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _applyPlatform(selectedPlat);
     setStateAt(0);
   }
 
   @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _keyCtl.dispose();
+    _baseUrlCtl.dispose();
+    _modelCtl.dispose();
+    super.dispose();
+  }
+
+  /// 回到应用即重新自检（macOS 授权完切回来，UI 自动刷新，无需重启）。
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_refreshPerms());
+    }
+  }
+
+  /// FlowDemoStateMixin 钩子：进入「权限引导」态时真实自检一次。
+  @override
+  void onStateChanged(int i) {
+    if (i == 3) {
+      unawaited(_refreshPerms());
+    }
+  }
+
+  @override
   void replay() => setStateAt(0);
+
+  // ---------------- 真实状态方法 ----------------
+
+  PlatformCatalogItem get _plat => kOnboardingCatalog[selectedPlat];
+  bool get _isOllama => _plat.kind == PlatformKind.ollama;
+
+  /// 引导平台卡默认值（kOnboardingCatalog 名称与 I 页目录部分不一致，独立给默认）。
+  void _applyPlatform(int i) {
+    selectedPlat = i;
+    final name = kOnboardingCatalog[i].name;
+    final (
+      String baseUrl,
+      String model,
+    ) = switch (name) {
+      'OpenAI' => ('https://api.openai.com/v1', 'gpt-4o-mini'),
+      'Anthropic' => ('https://api.anthropic.com/v1', 'claude-sonnet-4'),
+      'Gemini' => ('https://generativelanguage.googleapis.com/v1beta', 'gemini-2.0-flash'),
+      'DeepSeek' => ('https://api.deepseek.com/v1', 'deepseek-chat'),
+      '通义' => ('https://dashscope.aliyuncs.com/compatible-mode/v1', 'qwen-plus'),
+      _ => ('http://localhost:11434', 'qwen2.5:7b'), // Ollama 本地
+    };
+    _baseUrlCtl.text = baseUrl;
+    _modelCtl.text = model;
+    _keyCtl.text = '';
+    _testResult = null;
+    _savedProfile = null;
+  }
+
+  /// 「测试连接并保存」：成功才把 Key 写入 SecureStore 并落 Profile（ADR-001）。
+  Future<void> _testAndSave() async {
+    if (_testing) return;
+    setState(() {
+      _testing = true;
+      _testResult = null;
+    });
+    final r = await widget.store.testConnection(
+      platform: _plat.name,
+      baseUrl: _baseUrlCtl.text.trim(),
+      model: _modelCtl.text.trim(),
+      apiKey: _keyCtl.text.trim(),
+    );
+    if (!mounted) return;
+    ProviderProfile? saved;
+    if (r.success) {
+      saved = await widget.store.addProfileWithKey(
+        platform: _plat.name,
+        baseUrl: _baseUrlCtl.text.trim(),
+        model: _modelCtl.text.trim(),
+        apiKey: _isOllama ? null : _keyCtl.text.trim(),
+        healthy: true,
+        latencyMs: r.latencyMs,
+      );
+    }
+    if (!mounted) return;
+    setState(() {
+      _testing = false;
+      _testResult = r;
+      _savedProfile = saved;
+    });
+    ServiceScope.maybeOf(context)?.toasts.show(r.success
+        ? (_isOllama
+            ? '连接成功 · ${_plat.name} · ${r.latencyMs ?? 0}ms · 本地模型就绪，无需 Key'
+            : '连接成功 · ${_plat.name} · ${r.latencyMs ?? 0}ms · Key 已存入系统密钥串')
+        : '连接失败 · ${r.errorCode ?? 'unknown'}（可继续，也可先跳过）');
+  }
+
+  /// 「检测本地 Ollama」：Ollama 平台的等价动作（无 Key，纯探测）。
+  Future<void> _checkLocal() async {
+    if (_checkingLocal) return;
+    setState(() {
+      _checkingLocal = true;
+      _testResult = null;
+    });
+    final r = await widget.store.testConnection(
+      platform: 'Ollama（本地）',
+      baseUrl: _baseUrlCtl.text.trim(),
+      model: _modelCtl.text.trim(),
+    );
+    if (!mounted) return;
+    ProviderProfile? saved;
+    if (r.success) {
+      saved = await widget.store.addProfileWithKey(
+        platform: 'Ollama（本地）',
+        baseUrl: _baseUrlCtl.text.trim(),
+        model: _modelCtl.text.trim(),
+        healthy: true,
+        latencyMs: r.latencyMs,
+      );
+    }
+    if (!mounted) return;
+    setState(() {
+      _checkingLocal = false;
+      _testResult = r;
+      _savedProfile = saved;
+    });
+  }
+
+  /// 权限自检：走原生桥 permissionStatus（macOS 返回 accessibility /
+  /// inputMonitoring / microphone；Web 预览降级为空 map → UI 如实标注）。
+  Future<void> _refreshPerms() async {
+    setState(() => _permChecking = true);
+    final bridge = ServiceScope.maybeOf(context)?.bridge;
+    Map<String, bool> m = const {};
+    try {
+      m = await bridge?.permissionStatus() ?? const {};
+    } catch (_) {
+      m = const {};
+    }
+    if (!mounted) return;
+    setState(() {
+      _perms = m;
+      _permChecking = false;
+    });
+  }
+
+  Future<void> _openSettings(String kind, String label) async {
+    final bridge = ServiceScope.maybeOf(context)?.bridge;
+    if (bridge == null) return;
+    try {
+      await bridge.openPermissionSettings(kind);
+    } catch (_) {
+      // Web 预览：无系统设置可拉起，按钮点击保留（fallback 行为为 no-op）
+    }
+    if (!mounted) return;
+    ServiceScope.maybeOf(context)?.toasts.show(
+          '已在系统设置打开「$label」——授权后回到本窗口，会自动重新检测',
+        );
+  }
+
+  /// 权限态三分：true 已授权 / false 待授权 / null 无法检测（Web 预览）。
+  ({String label, Color color, bool granted}) _permState(String kind) {
+    final s = LfScheme.of(context);
+    final v = _perms[kind];
+    return switch (v) {
+      true => (label: '已授权', color: s.success, granted: true),
+      false => (label: '待授权', color: s.warning, granted: false),
+      null => (label: '未检测', color: s.text3, granted: false),
+    };
+  }
+
+  // ---------------- UI ----------------
 
   @override
   Widget build(BuildContext context) {
@@ -359,7 +554,7 @@ class _OnboardingPageState extends State<OnboardingPage> with FlowDemoStateMixin
         ),
       );
 
-  // --- 态 0 · 选平台 ---
+  // --- 态 0 · 选平台（真实选择，决定后续 Key 步行为）---
   Widget _stepPlatform() {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -368,13 +563,14 @@ class _OnboardingPageState extends State<OnboardingPage> with FlowDemoStateMixin
         const SizedBox(height: 14),
         _kicker('Welcome to LinguaFlow'),
         _title('选择你的模型平台'),
-        _sub('BYOK：用你自己的 Key，任意平台。没有 Key？可先用本地模型零门槛体验。'),
+        _sub('BYOK：用你自己的 Key，任意平台。没有 Key？选「Ollama 本地」零 Key 完成体验。'),
         const SizedBox(height: 16),
         GridView.count(
           crossAxisCount: 3,
           mainAxisSpacing: 8,
           crossAxisSpacing: 8,
-          childAspectRatio: 2.6,
+          // 2.05：给 compact 卡（logo 24 + 名称）留足高度，避免 600px 测试视口下溢出
+          childAspectRatio: 2.05,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: [
@@ -383,7 +579,7 @@ class _OnboardingPageState extends State<OnboardingPage> with FlowDemoStateMixin
                 item: p,
                 selected: i == selectedPlat,
                 compact: true,
-                onTap: () => setState(() => selectedPlat = i),
+                onTap: () => setState(() => _applyPlatform(i)),
               ),
           ],
         ),
@@ -395,9 +591,123 @@ class _OnboardingPageState extends State<OnboardingPage> with FlowDemoStateMixin
     );
   }
 
-  // --- 态 1 · 填 Key ---
+  /// 表单小输入行（真实 TextField）。
+  Widget _field({
+    required String label,
+    required TextEditingController ctl,
+    bool obscure = false,
+    bool requiredField = false,
+    String? hint,
+  }) {
+    final s = LfScheme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(label, style: TextStyle(fontSize: LfDimens.fs2xs, fontWeight: FontWeight.w600, color: s.text2)),
+            if (requiredField)
+              Text(' *', style: TextStyle(fontSize: LfDimens.fs2xs, color: s.error)),
+            const SizedBox(width: 6),
+            if (hint != null)
+              Expanded(
+                child: Text(
+                  hint,
+                  style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text3),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        TextField(
+          controller: ctl,
+          obscureText: obscure,
+          style: TextStyle(fontSize: LfDimens.fsSm, color: s.text),
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(LfDimens.rInput),
+              borderSide: BorderSide(color: s.dividerStrong),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(LfDimens.rInput),
+              borderSide: BorderSide(color: s.dividerStrong),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 测试结果内联条（成功绿 / 失败红 + 原始返回，绝不静默）。
+  Widget? _testResultBar() {
+    final s = LfScheme.of(context);
+    final r = _testResult;
+    if (r == null) return null;
+    if (r.success) {
+      return Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.all(9),
+        decoration: BoxDecoration(
+          color: s.success.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(LfDimens.rCard),
+          border: Border.all(color: s.success.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: [
+            LfIcons.icon('check', size: 12, color: s.success),
+            const SizedBox(width: 7),
+            Expanded(
+              child: Text(
+                '连接成功 · ${r.latencyMs ?? 0}ms · ${_savedProfile != null ? (_isOllama ? '已保存（本地模型，零 Key）' : '已保存，Key 已存入系统密钥串') : '已保存'}',
+                style: TextStyle(fontSize: LfDimens.fsXs, color: s.text),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(9),
+      decoration: BoxDecoration(
+        color: s.error.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(LfDimens.rCard),
+        border: Border.all(color: s.error.withValues(alpha: 0.45)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              LfIcons.icon('warn', size: 12, color: s.error),
+              const SizedBox(width: 7),
+              Text(
+                '测试失败 · ${r.errorCode ?? 'unknown'}（未保存，可重试或跳过）',
+                style: TextStyle(fontSize: LfDimens.fsXs, fontWeight: FontWeight.w600, color: s.error),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '模型方返回：${r.errorMessage ?? '（无响应体）'}',
+            style: TextStyle(fontSize: LfDimens.fs2xs, color: s.error, height: 1.5),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- 态 1 · 填 Key（真实：testConnection → addProfileWithKey）---
   Widget _stepKey() {
     final s = LfScheme.of(context);
+    final testing = _testing || _checkingLocal;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -405,61 +715,100 @@ class _OnboardingPageState extends State<OnboardingPage> with FlowDemoStateMixin
         _dots(1),
         const SizedBox(height: 14),
         Center(child: _kicker('BYOK')),
-        Center(child: _title('填入 API Key')),
-        Center(child: _sub('Key 只存本机系统密钥串；请求直连模型方，不经我方服务器。')),
+        Center(child: _title(_isOllama ? '接通本地模型' : '填入 API Key')),
+        Center(child: _sub(_isOllama
+            ? '本地模型无需任何 Key；请求不出本机，离线可用。'
+            : 'Key 只存本机系统密钥串；请求直连模型方，不经我方服务器。')),
         const SizedBox(height: 16),
-        FormFieldRow(
-          label: 'API Key',
-          requiredField: true,
-          child: Container(
-            height: 34,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: s.bgSource,
-              borderRadius: BorderRadius.circular(LfDimens.rInput),
-              border: Border.all(color: s.dividerStrong),
-            ),
-            alignment: Alignment.centerLeft,
-            child: Text('sk-… / sk-ant-… / AIza…', style: TextStyle(fontSize: LfDimens.fsSm, color: s.text3)),
+        if (!_isOllama) ...[
+          _field(
+            label: 'API Key',
+            requiredField: true,
+            obscure: true,
+            ctl: _keyCtl,
+            hint: '存入系统密钥串，明文不落盘',
           ),
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            Text('申请链接：', style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text3)),
-            for (final (i, n) in ['OpenAI', 'Anthropic', 'Gemini', 'DeepSeek'].indexed) ...[
-              if (i > 0) Text(' · ', style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text3)),
-              InlineLink(n),
-            ],
-          ],
-        ),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: Row(
+              children: [
+                Text('申请链接：', style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text3)),
+                for (final (i, n) in ['OpenAI', 'Anthropic', 'Gemini', 'DeepSeek'].indexed) ...[
+                  if (i > 0) Text(' · ', style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text3)),
+                  InlineLink(n),
+                ],
+              ],
+            ),
+          ),
+        ] else ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: s.success.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(LfDimens.rCard),
+              border: Border.all(color: s.success.withValues(alpha: 0.35)),
+            ),
+            child: Row(
+              children: [
+                LfIcons.icon('check', size: 12, color: s.success),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    '本地模型 · 无需 API Key · 数据不出本机（零 Key 也能完整体验成稿链路）',
+                    style: TextStyle(fontSize: LfDimens.fsXs, color: s.success),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 10),
-        FormFieldRow(
-          label: 'BaseURL（可选，默认官方端点）',
-          child: Container(
-            height: 34,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: s.bgSource,
-              borderRadius: BorderRadius.circular(LfDimens.rInput),
-              border: Border.all(color: s.dividerStrong),
-            ),
-            alignment: Alignment.centerLeft,
-            child: Text('https://api.openai.com/v1', style: TextStyle(fontSize: LfDimens.fsSm, color: s.text3)),
+        _field(label: 'BaseURL', ctl: _baseUrlCtl, hint: '默认官方端点 / 本地端口'),
+        const SizedBox(height: 10),
+        _field(label: '模型', ctl: _modelCtl, hint: '可先保留默认'),
+        if (testing) ...[
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const LfSpinner(size: 10),
+              const SizedBox(width: 7),
+              Text(
+                _checkingLocal ? '检测本地 Ollama…' : '测试连接中…',
+                style: TextStyle(fontSize: LfDimens.fsXs, color: s.text2),
+              ),
+            ],
           ),
-        ),
+        ],
+        if (_testResult != null) _testResultBar()!,
         _actions([
           LfButton(label: '上一步', onPressed: () => setStateAt(0)),
-          LfButton(label: '跳过，先用本地模型试用', onPressed: () => setStateAt(2)),
+          if (_isOllama)
+            LfButton(
+              label: _checkingLocal ? '检测中…' : '检测本地连接',
+              onPressed: _checkingLocal ? null : _checkLocal,
+            )
+          else
+            LfButton(
+              label: _testing ? '测试中…' : '测试连接并保存',
+              onPressed: _testing ? null : _testAndSave,
+            ),
+          LfButton(label: _isOllama ? '跳过，直接下一步' : '跳过，先用演示流式', onPressed: () => setStateAt(2)),
           LfButton(label: '下一步', kind: LfButtonKind.primary, onPressed: () => setStateAt(2)),
         ]),
       ],
     );
   }
 
-  // --- 态 2 · 设热键 ---
+  // --- 态 2 · 设热键（真实：store.hotkeys 当前值 + 注册状态）---
   Widget _stepHotkeys() {
     final s = LfScheme.of(context);
+    final scope = ServiceScope.maybeOf(context);
+    final items = widget.store.hotkeys;
+    final hkA = items.where((h) => h.id == 'hk-a').firstOrNull ?? AppStore.kDefaultHotkeys[0];
+    final hkB = items.where((h) => h.id == 'hk-b').firstOrNull ?? AppStore.kDefaultHotkeys[1];
+    final native = scope?.hotkeys.lastReport?.native == true;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -476,10 +825,12 @@ class _OnboardingPageState extends State<OnboardingPage> with FlowDemoStateMixin
             border: Border.all(color: s.divider),
           ),
           clipBehavior: Clip.antiAlias,
-          child: const Column(children: [
-            HotkeyRow(item: HotkeyItem(id: 'hold', label: '按住说话', mac: '按住 Fn', win: 'Win+H')),
-            HotkeyRow(item: HotkeyItem(id: 'invoke', label: '唤起悬浮窗', mac: '⌥ Space', win: '⌥ Space')),
-          ]),
+          child: Column(children: [HotkeyRow(item: hkA), HotkeyRow(item: hkB)]),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '当前生效范围：${native ? '原生全局（含其他应用）' : '应用内（浏览器/预览环境无法抢占全局按键；桌面端授权后自动升级为全局）'}',
+          style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text3),
         ),
         _actions([
           LfButton(label: '上一步', onPressed: () => setStateAt(1)),
@@ -489,24 +840,35 @@ class _OnboardingPageState extends State<OnboardingPage> with FlowDemoStateMixin
     );
   }
 
-  // --- 态 3 · 权限引导 ---
+  // --- 态 3 · 权限引导（真实自检 + 打开设置 + 回来自动刷新）---
   Widget _stepPerms() {
     final s = LfScheme.of(context);
-    Widget permCard(String iconName, String name, String desc) {
+    final nativeAvailable = ServiceScope.maybeOf(context)?.bridge.available == true;
+    final hasPerms = _perms.isNotEmpty; // Web 预览降级为空 map
+
+    Widget permCard(String iconName, String name, String kind, String desc) {
+      final st = _permState(kind);
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: s.bgSource,
           borderRadius: BorderRadius.circular(LfDimens.rCard),
-          border: Border.all(color: s.divider),
+          border: Border.all(
+            color: st.granted ? s.success.withValues(alpha: 0.45) : s.divider,
+          ),
         ),
         child: Row(
           children: [
             Container(
               width: 36,
               height: 36,
-              decoration: BoxDecoration(color: s.brandSoft, borderRadius: BorderRadius.circular(9)),
-              child: Center(child: LfIcons.icon(iconName, size: 17, color: s.brand)),
+              decoration: BoxDecoration(
+                color: st.granted ? s.success.withValues(alpha: 0.12) : s.brandSoft,
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Center(
+                child: LfIcons.icon(iconName, size: 17, color: st.granted ? s.success : s.brand),
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -517,7 +879,17 @@ class _OnboardingPageState extends State<OnboardingPage> with FlowDemoStateMixin
                     children: [
                       Text(name, style: TextStyle(fontSize: LfDimens.fsSm, fontWeight: FontWeight.w600, color: s.text)),
                       const SizedBox(width: 6),
-                      Text('· 待授权', style: TextStyle(fontSize: LfDimens.fs2xs, fontWeight: FontWeight.w600, color: s.warning)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: st.color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '· ${st.label}',
+                          style: TextStyle(fontSize: LfDimens.fs2xs, fontWeight: FontWeight.w600, color: st.color),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 2),
@@ -526,7 +898,13 @@ class _OnboardingPageState extends State<OnboardingPage> with FlowDemoStateMixin
               ),
             ),
             const SizedBox(width: 8),
-            const LfButton(label: '打开设置', padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6)),
+            st.granted
+                ? LfIcons.icon('check', size: 16, color: s.success)
+                : LfButton(
+                    label: '打开设置',
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    onPressed: () => unawaited(_openSettings(kind, name)),
+                  ),
           ],
         ),
       );
@@ -541,20 +919,49 @@ class _OnboardingPageState extends State<OnboardingPage> with FlowDemoStateMixin
         _title('授予两个系统权限'),
         _sub('全局热键需要以下权限；只用于监听热键与读取选中文本，不做任何采集（§8 隐私）。'),
         const SizedBox(height: 16),
-        permCard('accessibility', '辅助功能', '监听全局热键（Fn / ⌥ 组合）并向其他应用注入文本'),
+        permCard('accessibility', '辅助功能', 'accessibility', '监听全局热键（Fn / ⌥ 组合）并向其他应用注入文本'),
         const SizedBox(height: 8),
-        permCard('mouse', '输入监控', '读取划词选区，实现流程 C / D'),
+        permCard('mouse', '输入监控', 'inputMonitoring', '读取划词选区，实现流程 C / D'),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_permChecking) ...[
+              const LfSpinner(size: 10),
+              const SizedBox(width: 6),
+              Text('检测中…', style: TextStyle(fontSize: LfDimens.fs2xs, color: s.text2)),
+            ] else ...[
+              LfButton(
+                label: '重新检测',
+                icon: 'refresh',
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                onPressed: _refreshPerms,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                hasPerms ? '授权后切回本窗口会自动重新检测' : '当前环境未接原生权限接口（Web 预览）——桌面端将真实拉起系统设置',
+                style: TextStyle(fontSize: LfDimens.fs2xs, color: nativeAvailable ? s.text3 : s.warning),
+              ),
+            ],
+          ],
+        ),
         _actions([
           LfButton(label: '上一步', onPressed: () => setStateAt(2)),
-          LfButton(label: '我已授权，完成', kind: LfButtonKind.primary, onPressed: () => setStateAt(4)),
+          LfButton(label: '完成', kind: LfButtonKind.primary, onPressed: () => setStateAt(4)),
         ]),
       ],
     );
   }
 
-  // --- 态 4 · 完成 ---
+  // --- 态 4 · 完成（真实反映本次向导结果）---
   Widget _stepDone() {
     final s = LfScheme.of(context);
+    final p = _savedProfile ?? widget.store.defaultProfile;
+    final configured = p != null;
+    final label = configured ? '${p.platform} · ${p.model}' : '演示流式 · MockProvider';
+    final sub = configured
+        ? '当前默认：$label${p.keyRef != null ? '（Key 已入系统密钥串）' : '（本地 · 离线 · 零成本）'}。随时可在「模型配置」切换或新增 Provider。'
+        : '未配置模型：先走演示流式兜底（绝不白屏，PRD §7）。随时可在「模型配置」接入 OpenAI / Claude / Gemini / Ollama。';
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -568,20 +975,34 @@ class _OnboardingPageState extends State<OnboardingPage> with FlowDemoStateMixin
         ),
         const SizedBox(height: 12),
         _title('一切就绪'),
-        _sub('当前默认：Ollama · qwen2.5:7b（本地 · 离线 · 零成本）。随时可在「模型配置」切换或新增 Provider。'),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: _sub(sub),
+        ),
         const SizedBox(height: 14),
-        const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Badge('本地模型', live: true),
-          SizedBox(width: 8),
-          Badge('零遥测'),
-          SizedBox(width: 8),
-          Badge('五端同步'),
-        ]),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Badge(configured ? label : '演示流式', live: configured),
+            const SizedBox(width: 8),
+            const Badge('零遥测'),
+            const SizedBox(width: 8),
+            const Badge('五端同步'),
+          ],
+        ),
         _actions([
-          LfButton(label: '开始使用 · 按住 Fn 说话 →', kind: LfButtonKind.primary, onPressed: () {
-            widget.store.onboarded = true;
-            setStateAt(4);
-          }),
+          LfButton(
+            label: '开始使用 · 按住 Fn 说话 →',
+            kind: LfButtonKind.primary,
+            onPressed: () {
+              // 真实落状态：onboarded 持久化 + 选中平台记录
+              widget.store.setOnboarded(_plat.name);
+              setStateAt(4);
+              ServiceScope.maybeOf(context)
+                  ?.toasts
+                  .show('首次引导完成 · ${configured ? label : '演示流式兜底'}');
+            },
+          ),
         ]),
       ],
     );

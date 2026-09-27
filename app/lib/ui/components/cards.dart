@@ -42,8 +42,8 @@ class PlatCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            LogoBox(item.logo, color: Color(item.color), size: compact ? 28 : 32),
-            const SizedBox(height: 7),
+            LogoBox(item.logo, color: Color(item.color), size: compact ? 24 : 32),
+            const SizedBox(height: 6),
             Text(
               item.name,
               maxLines: 1,

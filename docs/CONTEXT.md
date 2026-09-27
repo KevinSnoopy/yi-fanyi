@@ -1,12 +1,12 @@
 ---
-phase: "Phase 2 · 真实代码开发（T-021/T-022/T-024 真实链路已通，macOS 原生壳待实机编译）"
+phase: "Phase 2 · 真实代码开发（T-021/T-022/T-023/T-024/T-025 真实链路全通，macOS 原生壳待实机编译）"
 stage: flutter-real-links-done
 last_updated: 2026-09-27
-current_focus: "T-021 ✅ 真实 Provider 联调（Key→SecureStore/Keychain，Profile 只留 keyRef；真实 testConnection/fetchModels；真实 SSE 成稿 + 失败内联错误条 + 一键降级演示流式）；T-022 ✅ B/C/D 系统触发双落地（原生 system / 应用内 inApp）；T-024 ✅ 结构化热键 + 三平台冲突表 + 真实重绑 + macOS Carbon/AX/Keychain/NSPanel/StatusBar 原生壳；flutter analyze 0 issue、flutter test 44/44、web release ✓、冒烟 15/15 PASS 0 错误"
-next_action: "macOS 实机编译验证（`flutter build macos` + 权限引导）；T-023 三套真连接（OpenAI / 自定义 BaseURL / Ollama）；T-025 权限引导接真实系统设置回执"
+current_focus: "T-023 ✅ 模型配置页三套真连接（OpenAI 官方 / 自定义 BaseURL / Ollama 本地，各自跑通「填 Key → 测试连接 → 拉取模型 → 成稿一次」）+ 401/429/model-not-found/wrong-BaseURL 四内联错误态；T-025 ✅ 首次引导接真实权限状态（自检→打开设置→resumed 自动刷新→手动重检）+ 零 Key Ollama 全链试用；顺带修复 4 个 provider listModels 裸抛 SocketException（收敛 networkUnreachable，ADR-007）；flutter analyze 0 issue、flutter test 66/66、web release ✓、冒烟 15/15 PASS 0 错误、Playwright 交互截图 14 张（fake Ollama 双栈真连 132ms/116ms）"
+next_action: "macOS 实机编译验证（`flutter build macos` + 权限引导 + 全局热键注册）；可选 T-026 测试补完（macOS 原生壳实机用例）；T-012 字段级规格"
 blockers:
   - "macOS 原生壳未实机编译（Linux 沙箱无 Xcode/macOS SDK，Swift 仅做语法与 API 正确性校验）"
-  - "T-023 三套真连接需真实 Key 环境"
+  - "真实 Key 环境未验收（本轮用 MockProviderServer/本地 fake server 覆盖协议正确性；真实 OpenAI/Anthropic Key 的联调留待实机）"
   - "License 未定（README 标 TBD）"
 has_code: true
 ---
@@ -20,13 +20,15 @@ has_code: true
 **Phase 2 · 真实代码开发**（`has_code: true`，代码在 [`app/`](../app/)）
 
 已完成：PRD v3.2 + 8 个 ADR + v7 SPA 原型（13/13）+ 竞品调研 + **Flutter 工程（T-020 ✅）：13 页 UI 全量、ADR-007 四 Provider 流式实现、ADR-008 四态状态机/pill/pipeline、analyze 0 issue、Web 冒烟 15/15 PASS**。
-本轮（2026-09-27 会话 10）把 Mock 骨架换成**真实链路**：T-021 ✅ 真实 Provider 联调（Key 进 Keychain、真实 SSE 成稿、血缘明示）、T-022 ✅ B/C/D 系统触发双落地、T-024 ✅ 全局热键结构化 + 冲突检测 + macOS 原生壳六文件。**44 项单测 + widget 端到端全绿**。
-当前卡点：macOS 实机编译（Swift 未编译验证）与真实 Key 环境下的三套连接验收（T-023）。
+会话 10（2026-09-27）把 Mock 骨架换成**真实链路**：T-021 ✅ 真实 Provider 联调（Key 进 Keychain、真实 SSE 成稿、血缘明示）、T-022 ✅ B/C/D 系统触发双落地、T-024 ✅ 全局热键结构化 + 冲突检测 + macOS 原生壳六文件。
+本轮（2026-09-27 会话 11）补齐剩余两个 UI 主任务：**T-023 ✅ 模型配置页三套真连接**（三协议各自跑通全链 + 四内联错误态）、**T-025 ✅ 首次引导真实权限状态 + 零 Key 全链**。**66 项单测 + widget 端到端全绿，Playwright 交互截图 14 张人工目检通过**。
+当前卡点：macOS 实机编译（Swift 未编译验证）与真实 Key 环境验收（协议正确性已用本地 fake server 覆盖）。
 
 ## 2. 最近一轮做了什么
 
 | 日期 | 会话 | 成果 |
 |---|---|---|
+| 2026-09-27 | [`2026-09-27-02-t023-t025-real-connections-onboarding`](./sessions/2026-09-27-02-t023-t025-real-connections-onboarding.md) | T-023 ✅ / T-025 ✅：模型配置页三套真连接（OpenAI/自定义 BaseURL/Ollama 各跑通「填 Key→测试连接→拉取模型→成稿一次」，401/429/model-not-found/wrong-BaseURL 四内联错误态 + ADR-001 Key→SecureStore 链验证）；首次引导真实权限状态（自检→打开设置→resumed 自动刷新→手动重检）+ 零 Key Ollama 全链；修复 listModels 裸抛 SocketException（4 provider 收敛 networkUnreachable）+ Ollama 平台名归一化 + 零 Key 文案；66/66 测试全绿 + 冒烟 15/15 + 交互截图 14 张。遗留：Swift 未实机编译 |
 | 2026-09-27 | [`2026-09-27-01-t021-t022-t024-real-links`](./sessions/2026-09-27-01-t021-t022-t024-real-links.md) | T-021 ✅ / T-022 ✅ / T-024 ✅：真实 Provider 联调（SecureStore/Keychain + 真实 SSE + 失败错误条 + 一键降级）、B/C/D 系统触发双落地（悬浮窗/划词/静默替换 + 焦点变化终止）、结构化热键 + 三平台冲突表 + 真实重绑、macOS 原生壳六文件（Carbon 热键 / AX 注入 / Keychain / NSPanel / StatusBar / 两插件）+ 44 项测试全绿。遗留：Swift 未实机编译 |
 | 2026-09-26 | [`2026-09-26-09-flutter-app-skeleton`](./sessions/2026-09-26-09-flutter-app-skeleton.md) | T-020 ✅：`app/` Flutter 3.47.5 工程落地（tokens/LfIcons/ADR-007 四 Provider + CancelToken/ADR-008 状态机 + DraftPipeline/13 页 UI + AppShell/main）。修复首编 85 error + CanvasKit 中文字体打包（Noto Sans CJK SC）+ Material 祖先缺失 + L 页溢出。`flutter analyze` 0 issue；`flutter build web --release` ✓；冒烟 15/15 PASS 0 JS 错误；核心链路（长按🎤→录音 pill→成稿→预览 1.2s→落框）实测通过 |
 | 2026-09-26 | [`2026-09-26-08-t015-typeless-chatterfly`](./sessions/2026-09-26-08-t015-typeless-chatterfly.md) | T-015 ✅：用户拍板参考系 **Typeless + Chatterfly**（成稿为主、翻译是开关）。PRD v3.2 定位对齐（§1.1/§1.4/§2 流程 A/§3/§5.1/§5.3①/§6 + 部署版 8 处同步）+ 竞品情报全量重写（Chatterfly 2026-09 内测六场景 Skill / Typeless 2026 iOS 实况）+ v7 原型落地 `prototypes/v7-spa/`（Tab A 重写：同语言成稿默认 + pill 160×36 + 「译」开关默认关；Tab K Skills 六场景；修复 K→A hostThread 残留；无头冒烟 13 Tab 0 错误）+ 协议文档全量对齐 |
@@ -46,9 +48,9 @@ has_code: true
 
 其他可平行动作（不需要用户口径）：
 
-- T-007 竞品实测（试用 Typeless / Bob / Chatterfly；本轮已完成 Chatterfly/Typeless 情报补全，剩实测项）
+- **macOS 实机编译**（Phase 2 最大遗留；`flutter build macos` + 权限引导 + Carbon 热键注册 + AX 注入实机验证）
+- T-007 竞品实测（试用 Typeless / Bob / Chatterfly；剩实测项）
 - T-013 Design Token 落地（口径已定：Typeless pill + 现行 Token）
-- T-011 Provider 适配层 Dart 接口实现（[ADR-007](../decisions/007-provider-interface.md) 已定义接口）
 
 ## 4. 阻塞点（需用户拍板，Agent 不得自行假设）
 
@@ -85,6 +87,7 @@ has_code: true
 - 沙箱内 Flutter 必须显式指定 SDK：`export PATH=/opt/flutter-3.47/flutter/bin:$PATH`（默认 `flutter` 是 3.0.0，pub 解不动）
 - Web 构建前先 `bash app/tool/fetch_fonts.sh`，否则中文豆腐块
 - 冒烟脚本坑：每 tab 独立 page + `service_workers='block'` + canvas 像素方差判活
+- **widget 测试内打真实 localhost HTTP 的三层坑**（会话 11 实战总结）：① flutter_test 把 `HttpOverrides.global` 设为 mock（所有请求→400），setUp 里晚于 binding 初始化覆盖回去即可；② 自定义 `HttpOverrides.createHttpClient` 必须调 `super.createHttpClient(context)`——直接调 `HttpClient()` 会无限递归 Stack Overflow；③ FakeAsync zone 里发起的 HTTP 永远等不到 socket 事件——必须 `tester.runAsync(() async { await tester.tap(...); await Future.delayed(...); })` 让 tap 回调里的 async 链整体跑在真实 zone。另外表单页高度超 600px 默认视口时按钮在屏外 tap 不命中，先 `tester.view.physicalSize = Size(800, 1400)`。toast 的 2.2s timer：fake zone 的用 pump 推、runAsync 真实 zone 的要再 runAsync delay 推完，否则 pending timers 断言失败
 - **vision 工具 1 张/次**（9 张/次必超时）
 - **delegated subagent 写文件用沙盒隔离**，交付物必须由主 agent 重新落库
 - **不要重复已有产品的截图到 README 正文**——独立存 `screenshots/` 子目录，正文引用路径

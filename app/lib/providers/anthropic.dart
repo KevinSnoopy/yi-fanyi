@@ -112,7 +112,13 @@ class AnthropicProvider implements TranslationProvider {
 
   @override
   Future<List<String>> listModels() async {
-    final resp = await _client.get(Uri.parse('$baseUrl/models'), headers: _headers);
+    final http.Response resp;
+    try {
+      resp = await _client.get(Uri.parse('$baseUrl/models'), headers: _headers);
+    } catch (e) {
+      // ADR-007：网络层异常必须收敛为统一错误码，不得裸抛 SocketException
+      throw LfProviderException(LfErrorCode.networkUnreachable, e.toString());
+    }
     if (resp.statusCode != 200) throw mapHttpError(resp.statusCode, resp.body);
     final json = jsonDecode(resp.body) as Map<String, Object?>;
     final data = json['data'] as List<Object?>? ?? const [];

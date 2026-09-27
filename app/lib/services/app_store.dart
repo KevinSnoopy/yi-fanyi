@@ -183,7 +183,7 @@ class AppStore extends ChangeNotifier {
         return AnthropicProvider(apiKey: apiKey, model: p.model, baseUrl: p.baseUrl);
       case 'Gemini':
         return GeminiProvider(apiKey: apiKey, model: p.model, baseUrl: p.baseUrl);
-      case 'Ollama' || 'Ollama（本地）':
+      case 'Ollama' || 'Ollama（本地）' || 'Ollama 本地':
         return OllamaProvider(model: p.model, baseUrl: p.baseUrl);
       default:
         return OpenAICompatibleProvider.forPlatform(
@@ -294,6 +294,37 @@ class AppStore extends ChangeNotifier {
     }
   }
 
+  /// T-023 · 「成稿试一句」—— 用给定配置真实成稿一次（流式），不落库、不写 Key。
+  ///
+  /// I 页「测试连接」只验证鉴权与端点；本方法验证**完整成稿链路**（含模型名
+  /// 是否真实存在、SSE/NDJSON 是否可产出）。失败抛 [LfProviderException]，
+  /// UI 侧内联展示原始返回（401 / 429 / model_not_found / networkUnreachable）。
+  Stream<String> draftTestOnce({
+    required String platform,
+    required String baseUrl,
+    required String model,
+    String? apiKey,
+    String transcript = kDraftTestSentence,
+  }) {
+    final p = _construct(platform: platform, baseUrl: baseUrl, model: model, apiKey: apiKey ?? '');
+    Stream<String> stream() async* {
+      try {
+        yield* p.draft(DraftRequest(transcript: transcript, tone: 'im'));
+      } finally {
+        p.dispose();
+      }
+    }
+
+    return stream();
+  }
+
+  /// 读取已存 Profile 的 Key 明文（I 页「成稿试一句」对已保存模型直接用库内 Key）。
+  Future<String?> readKey(ProviderProfile p) async =>
+      p.keyRef == null ? null : await secure.read(p.keyRef!);
+
+  /// 成稿试一句的固定例句（口语原话 → 模型方润色为书面语）。
+  static const String kDraftTestSentence = '呃…那个报价我确认没问题啊，就下周三之前吧，合同我来安排。';
+
   /// 保存 Provider：Key 先入 SecureStore，Profile 只留引用 id（ADR-001）。
   Future<ProviderProfile> addProfileWithKey({
     required String platform,
@@ -312,7 +343,8 @@ class AppStore extends ChangeNotifier {
     }
     final profile = ProviderProfile(
       id: id,
-      platform: platform,
+      // 目录名 'Ollama' 落库统一为 'Ollama（本地）'（与 buildProvider / 默认卡展示一致）
+      platform: platform == 'Ollama' ? 'Ollama（本地）' : platform,
       baseUrl: baseUrl,
       model: model,
       keyRef: keyRef,
