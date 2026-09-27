@@ -1,11 +1,13 @@
 ---
-phase: "Phase 2 · 真实代码开发（T-021/T-022/T-023/T-024/T-025 真实链路全通，macOS 原生壳待实机编译）"
-stage: flutter-real-links-done
+phase: "Phase 2 · 真实代码开发（UI 主任务 T-020~T-025 全 ✅；T-011/T-012 收账完成；macOS 原生壳待实机编译）"
+stage: macos-verify-prep-and-page-specs
 last_updated: 2026-09-27
-current_focus: "T-023 ✅ 模型配置页三套真连接（OpenAI 官方 / 自定义 BaseURL / Ollama 本地，各自跑通「填 Key → 测试连接 → 拉取模型 → 成稿一次」）+ 401/429/model-not-found/wrong-BaseURL 四内联错误态；T-025 ✅ 首次引导接真实权限状态（自检→打开设置→resumed 自动刷新→手动重检）+ 零 Key Ollama 全链试用；顺带修复 4 个 provider listModels 裸抛 SocketException（收敛 networkUnreachable，ADR-007）；flutter analyze 0 issue、flutter test 66/66、web release ✓、冒烟 15/15 PASS 0 错误、Playwright 交互截图 14 张（fake Ollama 双栈真连 132ms/116ms）"
-next_action: "macOS 实机编译验证（`flutter build macos` + 权限引导 + 全局热键注册）；可选 T-026 测试补完（macOS 原生壳实机用例）；T-012 字段级规格"
+current_focus: "会话 12（Round-4）：T-020 实机验证准备包三件套（macos_verify.sh 一键脚本 + macos-verify-checklist.md 分步 checklist + method-channel-contract.md 契约核对表，Dart vs 8 Swift 文件逐方法比对 + entitlements/TCC 核对）；核对修复 2 处 P0——B1 AppDelegate 双引擎（重复 RegisterGeneratedPlugins→插件挂错引擎→MissingPluginException）、B2 反向事件断线（linguaflow/native 通道未传给 SystemTriggerService）；T-011 追认收账 ✅；T-012 ✅ pages-specs/ 15 份字段级规格（13 页 + Windows/Android 皮肤，冲突点 C1–C16 汇总待拍板）；回归 analyze 0 issue + test 66/66"
+next_action: "macOS 实机验证（用户侧跑 app/tool/macos_verify.sh，按 checklist 六项能力验证 + result-draft 回传）；可选 T-013 Design Token 落地；T-030 三端平移准备"
 blockers:
-  - "macOS 原生壳未实机编译（Linux 沙箱无 Xcode/macOS SDK，Swift 仅做语法与 API 正确性校验）"
+  - "macOS 原生壳未实机编译（Linux 沙箱无 Xcode/macOS SDK，Swift 仅做语法与 API 正确性校验；B1/B2 契约修复未经实机验证）"
+  - "沙盒 entitlements 拍板项（App Sandbox 与 CGEvent 合成事件张力，见 method-channel-contract.md §6，未擅改）"
+  - "pages-specs 冲突点 C1–C16 待拍板（实现为准 / 原型为准，见 pages-specs/README.md）"
   - "真实 Key 环境未验收（本轮用 MockProviderServer/本地 fake server 覆盖协议正确性；真实 OpenAI/Anthropic Key 的联调留待实机）"
   - "License 未定（README 标 TBD）"
 has_code: true
@@ -21,13 +23,15 @@ has_code: true
 
 已完成：PRD v3.2 + 8 个 ADR + v7 SPA 原型（13/13）+ 竞品调研 + **Flutter 工程（T-020 ✅）：13 页 UI 全量、ADR-007 四 Provider 流式实现、ADR-008 四态状态机/pill/pipeline、analyze 0 issue、Web 冒烟 15/15 PASS**。
 会话 10（2026-09-27）把 Mock 骨架换成**真实链路**：T-021 ✅ 真实 Provider 联调（Key 进 Keychain、真实 SSE 成稿、血缘明示）、T-022 ✅ B/C/D 系统触发双落地、T-024 ✅ 全局热键结构化 + 冲突检测 + macOS 原生壳六文件。
-本轮（2026-09-27 会话 11）补齐剩余两个 UI 主任务：**T-023 ✅ 模型配置页三套真连接**（三协议各自跑通全链 + 四内联错误态）、**T-025 ✅ 首次引导真实权限状态 + 零 Key 全链**。**66 项单测 + widget 端到端全绿，Playwright 交互截图 14 张人工目检通过**。
-当前卡点：macOS 实机编译（Swift 未编译验证）与真实 Key 环境验收（协议正确性已用本地 fake server 覆盖）。
+会话 11（2026-09-27）补齐剩余两个 UI 主任务：**T-023 ✅ 模型配置页三套真连接**、**T-025 ✅ 首次引导真实权限状态 + 零 Key 全链**。**66 项单测 + widget 端到端全绿**。
+会话 12（2026-09-27，Round-4）做实机验证准备：**T-020 实机验证准备包三件套**（一键脚本 / 分步 checklist / MethodChannel 契约核对表），逐通道比对 Dart 与 8 个 Swift 文件，**发现并修复 2 处 P0**（B1 双引擎 / B2 反向事件断线）；**T-011 追认收账 ✅**；**T-012 ✅** `pages-specs/` 15 份字段级规格（13 页 + Windows/Android 皮肤，冲突 C1–C16 汇总于 README）。回归：analyze 0 issue、test 66/66 全绿。
+当前卡点：macOS 实机验证（Swift 壳 + B1/B2 修复均未实机编译）与真实 Key 环境验收。
 
 ## 2. 最近一轮做了什么
 
 | 日期 | 会话 | 成果 |
 |---|---|---|
+| 2026-09-27 | [`2026-09-27-03-macos-verify-prep-t012-pages-specs`](./sessions/2026-09-27-03-macos-verify-prep-t012-pages-specs.md) | T-020 实机验证准备包（**未实机编译**）：① `app/tool/macos_verify.sh`（双构建 + flutter run + 六项能力分步验证引导 + log 归档）② `docs/macos-verify-checklist.md`（前置→双构建→通道连通→六项→回传约定→覆盖矩阵）③ `docs/method-channel-contract.md`（secure 3 / native 11 方法 + 反向事件逐项比对 8 Swift 文件 + wire 串一致性 + 风险 R1–R9 + entitlements/TCC 核对）。修复 P0×2：B1 AppDelegate 双引擎（复用 MainFlutterWindow 唯一引擎，删重复 RegisterGeneratedPlugins）；B2 main.dart 未传 `linguaflow/native` 通道给 SystemTriggerService（反向 hotkey 事件断线）。T-011 追认收账 ✅；T-012 ✅ `pages-specs/` 15 份（13 页 + n1 Windows / n2 Android 皮肤；冲突 C1–C16 待拍板）。analyze 0 issue + test 66/66 |
 | 2026-09-27 | [`2026-09-27-02-t023-t025-real-connections-onboarding`](./sessions/2026-09-27-02-t023-t025-real-connections-onboarding.md) | T-023 ✅ / T-025 ✅：模型配置页三套真连接（OpenAI/自定义 BaseURL/Ollama 各跑通「填 Key→测试连接→拉取模型→成稿一次」，401/429/model-not-found/wrong-BaseURL 四内联错误态 + ADR-001 Key→SecureStore 链验证）；首次引导真实权限状态（自检→打开设置→resumed 自动刷新→手动重检）+ 零 Key Ollama 全链；修复 listModels 裸抛 SocketException（4 provider 收敛 networkUnreachable）+ Ollama 平台名归一化 + 零 Key 文案；66/66 测试全绿 + 冒烟 15/15 + 交互截图 14 张。遗留：Swift 未实机编译 |
 | 2026-09-27 | [`2026-09-27-01-t021-t022-t024-real-links`](./sessions/2026-09-27-01-t021-t022-t024-real-links.md) | T-021 ✅ / T-022 ✅ / T-024 ✅：真实 Provider 联调（SecureStore/Keychain + 真实 SSE + 失败错误条 + 一键降级）、B/C/D 系统触发双落地（悬浮窗/划词/静默替换 + 焦点变化终止）、结构化热键 + 三平台冲突表 + 真实重绑、macOS 原生壳六文件（Carbon 热键 / AX 注入 / Keychain / NSPanel / StatusBar / 两插件）+ 44 项测试全绿。遗留：Swift 未实机编译 |
 | 2026-09-26 | [`2026-09-26-09-flutter-app-skeleton`](./sessions/2026-09-26-09-flutter-app-skeleton.md) | T-020 ✅：`app/` Flutter 3.47.5 工程落地（tokens/LfIcons/ADR-007 四 Provider + CancelToken/ADR-008 状态机 + DraftPipeline/13 页 UI + AppShell/main）。修复首编 85 error + CanvasKit 中文字体打包（Noto Sans CJK SC）+ Material 祖先缺失 + L 页溢出。`flutter analyze` 0 issue；`flutter build web --release` ✓；冒烟 15/15 PASS 0 JS 错误；核心链路（长按🎤→录音 pill→成稿→预览 1.2s→落框）实测通过 |
@@ -42,15 +46,16 @@ has_code: true
 
 ## 3. 进行中 / 待领任务
 
-见 [`TASKS.md`](./TASKS.md)。当前无 🟡 进行中任务。下一可领取任务：
+见 [`TASKS.md`](./TASKS.md)。Phase 1 设计三选项全部收账（T-011/T-012 ✅）。下一可领取任务：
 
-- **T-012**（13 页字段级规格）— v7 已提供 13 页交互参照，可直接开工；产出 `pages-specs/`
+- **T-013**（Design Token 落地）— 依赖 T-014 已满足；`pages-specs/` 已给组件规格参照
+- **T-007**（竞品实测）— 待用户实机试用
 
 其他可平行动作（不需要用户口径）：
 
-- **macOS 实机编译**（Phase 2 最大遗留；`flutter build macos` + 权限引导 + Carbon 热键注册 + AX 注入实机验证）
-- T-007 竞品实测（试用 Typeless / Bob / Chatterfly；剩实测项）
-- T-013 Design Token 落地（口径已定：Typeless pill + 现行 Token）
+- **macOS 实机验证**（Phase 2 最大遗留；用户侧跑 `bash app/tool/macos_verify.sh`，按 `docs/macos-verify-checklist.md` 六项能力验证，result-draft 回传后 Agent 分析日志修复 R1/R3/R4/R6 等风险项）
+- **T-030 三端平移准备**（Linux/Windows 条件编译盘点，pages-specs n1/n2 皮肤已给参照）
+- 处理 pages-specs 冲突点 C1–C16（需用户逐项拍板「实现为准 / 原型为准」）
 
 ## 4. 阻塞点（需用户拍板，Agent 不得自行假设）
 
@@ -95,6 +100,11 @@ has_code: true
 - **原型落地规范**：**唯一现行** v7 SPA 在 [`prototypes/v7-spa/`](../prototypes/v7-spa/)（3 文件，Tab A–M 13 页全量 + 成稿范式 + 走查面板）；**v1/v5/v6 原型与 v2.0 PRD、assets 部署版已按用户要求删除收敛，不得重建旧版副本**；13 页对照表见 [`prototypes/README.md`](../prototypes/README.md)
 - **单一事实源铁律**：PRD 仅 `PRD_v3.0.md` 一份、原型仅 `prototypes/v7-spa/` 一套（2026-09-26 用户拍板）；历史回执与 ADR 中出现的旧路径（PRD_v2.0.md / v5-spa / v6-spa / assets/PRD_v3.0_deploy.html）均为历史引用，git 历史（`7442094` 之前）可溯
 - **原型 JS 约定**：演示延时一律走 `schedule()`（playTimers 集合统一清理），禁止裸 `setTimeout` 存回单个变量——v5 的孤儿 timer 竞态就是这么来的（会话 07 修复）
+- **沙箱 /etc/hosts 是 bind mount 会被还原**（会话 12）：预写的 GitHub IP 重启后消失且 git clone TLS 握手失败。修复法：用 DoH（`curl -H 'accept: application/dns-json' 'https://dns.alidns.com/resolve?name=github.com&type=A'`）解析 6 个 GitHub 域名真实 IP 写回 `/etc/hosts`，同时落一份 `~/.user_hosts`（家目录持久化），恢复后 `git -c http.version=HTTP/1.1` clone/push 均通
+- **沙箱重置后 Flutter SDK 会消失**（会话 12）：`/opt/flutter-3.47` 不存在时重下 `flutter_linux_3.47.5-stable.tar.xz`（flutter-io.cn 镜像）解压即可；字体走 `app/tool/fetch_fonts.sh`（国内网络下载慢，放后台跑）
+- **macOS 壳双引擎坑（B1，会话 12 修复）**：`MainFlutterWindow` nib 在 `awakeFromNib` 已调过 `RegisterGeneratedPlugins` 并建好唯一引擎；`AppDelegate.applicationDidFinishLaunching` 里再新建 FlutterViewController + 重复注册 → 自研插件挂到**无 Dart isolate 的引擎**上 → Dart 侧全部 `MissingPluginException`。正确姿势：复用 `NSApp.windows.first { $0 is MainFlutterWindow }?.contentViewController`
+- **反向事件通道坑（B2，会话 12 修复）**：Swift → Dart 的 hotkey/overlayResult 事件走 `linguaflow/native` 通道反向 invokeMethod；`main.dart` 若不把该通道传给 `bootstrap(nativeChannel:)` → `SystemTriggerService` 收不到任何事件。新增 Dart→原生能力时同步检查反向事件订阅链
+- **页面规格冲突标注约定**（会话 12，T-012）：规格以 `app/lib/ui/pages/` 实现为准；实现与原型不一致处标 ⚖️ C 编号，汇总在 `pages-specs/README.md`，**Agent 不得自行裁决，留用户拍板**
 
 ## 7. 给下一个 Agent 的速读路径
 
@@ -105,4 +115,5 @@ has_code: true
 5. 读 [`2026-09-26-06-prd-v3-push.md`](./sessions/2026-09-26-06-prd-v3-push.md)（v3.0 拆分 + v5 SPA 落地说明）
 6. 读 [`2026-09-26-07-prd-tidy-v6-prototype.md`](./sessions/2026-09-26-07-prd-tidy-v6-prototype.md)（v6 原型落地 + PRD v3.1 修订说明）
 7. 读 [`2026-09-26-08-t015-typeless-chatterfly.md`](./sessions/2026-09-26-08-t015-typeless-chatterfly.md)（T-015 口径落地 + v7 成稿范式说明）
-8. 下一任务默认 T-012（v7 已可作交互参照）；动 Tab A 前先读 T-015 口径与 PRD v3.2 §2.1
+8. 读 [`docs/method-channel-contract.md`](./method-channel-contract.md)（MethodChannel 契约 + B1/B2 修复 + 风险 R1–R9）与 [`docs/macos-verify-checklist.md`](./macos-verify-checklist.md)（实机验证步骤）；改 Swift 壳前必读
+9. 下一任务默认 T-013（Design Token）或等实机日志回传修 Swift；动字段/交互前先读 [`pages-specs/README.md`](../pages-specs/README.md) 的冲突点 C1–C16

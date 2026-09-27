@@ -36,8 +36,8 @@
 | ID | 任务 | 状态 | 依赖 | 验收要点 | 关联 |
 |---|---|---|---|---|---|
 | T-010 | 录音条三态 + 悬浮窗交互原型（选项 ①） | ⛔ 2026-09-26 作废 | T-005 选 ① | 用户否决（错把"翻译"做成主角；应先做 Typeless/Chatterfly 官网调研，按"语音输入为主、翻译可选"重新定位后再画）。**复盘详见** [`2026-09-26-04-t010-retro.md`](./sessions/2026-09-26-04-t010-retro.md)：5 维度教训（参照错位 / 定位权重 / 组件关系 / 触发范式 / 视觉调研缺失） | PRD §5.3 |
-| T-011 | Provider 适配层 Dart 接口定义（选项 ②） | ⬜ | T-005 选 ② | 接口 + OpenAI/Anthropic/Ollama 三实现 + 测试 | ADR-004 |
-| T-012 | 13 个页面字段级原型说明（选项 ③） | ⬜ | T-005 选 ③ | `pages-specs/` 下每页一份字段表 | PRD §6 |
+| T-011 | Provider 适配层 Dart 接口定义（选项 ②） | ✅ 2026-09-27（收账） | T-005 选 ② | 接口 + Provider 实现 + 测试。**实际由会话 10/11 实现**（ADR-007 统一接口 + OpenAI/Anthropic/Ollama/自定义 BaseURL 四 Provider + 66/66 测试），Round-4 追认收账，勿重做 | ADR-004 · ADR-007 |
+| T-012 | 13 个页面字段级原型说明（选项 ③） | ✅ 2026-09-27 | T-005 选 ③ | `pages-specs/` 15 文件（13 页 + n1 Windows 皮肤 + n2 Android 皮肤）：字段/类型/默认值/校验/来源/交互含错误态，以 `app/lib/ui/pages/` 实现为准；冲突点 C1–C16 汇总于 README 待拍板 | PRD §6 |
 | T-013 | Design Token 落地（浅/深主题 + 组件规格） | ⬜ | T-014 | Token 表与新版口径一致，组件覆盖 ①–⑥ | PRD §5 |
 | T-014 | Typeless + Wispr Flow + Spokenly + MacWhisper 官网设计调研 | ✅ 2026-09-26 | — | 覆盖 4 家（超出原 Typeless+Chatterfly 计划）；HTML+CSS 提取 + 9 张截图 + vision 分析。**回执** [`2026-09-26-05-t014-research.md`](./sessions/2026-09-26-05-t014-research.md)，**主文档** [`competitor-research/README.md`](./competitor-research/README.md) | docs/competitor-research/ |
 | T-015 | 按用户新口径重做原型（语音为主 / 翻译可选） | ✅ 2026-09-26 | T-014 + 用户口径 | 用户拍板参考系 **Typeless + Chatterfly**：成稿为主、翻译是开关。PRD v3.2 定位对齐（§1/§2 流程 A/§3/§5/§6 + 部署版同步）+ Chatterfly/Typeless 竞品情报全量重写 + v7 原型 `prototypes/v7-spa/`（Tab A 成稿范式 + pill 160×36 + 「译」开关默认关；Tab K Skills 六场景；无头冒烟 0 错误）。**回执** [`2026-09-26-08-t015-typeless-chatterfly.md`](./sessions/2026-09-26-08-t015-typeless-chatterfly.md) | `prototypes/v7-spa/` + `PRD_v3.0.md` v3.2 |
@@ -48,7 +48,7 @@
 
 | ID | 任务 | 状态 | 依赖 | 验收要点 | 关联 |
 |---|---|---|---|---|---|
-| T-020 | Flutter 工程脚手架 + macOS 原生桥 | 🟡 Web 端 ✅；macOS 原生壳已落地待实机编译（10 会话） | T-011 | 空壳可运行，MethodChannel 打通 | ADR-004 |
+| T-020 | Flutter 工程脚手架 + macOS 原生桥 | 🟡 Web 端 ✅；macOS 原生壳已落地待实机编译（10 会话）；Round-4 出实机验证准备包（脚本+checklist+契约表），核对修复 B1 双引擎 / B2 反向事件断线 | T-011 | 空壳可运行，MethodChannel 打通 | ADR-004 |
 | T-021 | 流程 A：按住 Fn 说话 → 成稿（默认）→ 翻译（开关开时）→ 写回 | ✅ 2026-09-27 | T-020 | Key 进 SecureStore（Profile 只留 keyRef）、真实 testConnection/fetchModels、真实 SSE 流式成稿、失败内联错误条 + 一键降级演示流式；44 项单测 + widget 端到端全绿 | PRD v3.2 §2.1 · ADR-001/007 |
 | T-022 | 流程 B / C / D：悬浮窗、划词、静默替换 | ✅ 2026-09-27（双落地：原生 system / 应用内 inApp） | T-020 | `SystemTriggerService` 双落地 + B 悬浮窗真实输入流式、C 原生选区优先、D 焦点变化即 abort；桌面原生壳已实现待实机验证 | PRD §2.2–2.4 · §4 规则 3 |
 | T-023 | 模型配置页（灵魂页面） | ✅ 2026-09-27（三套真连接全链 + 4 错误态；桌面端待实机） | T-020 | OpenAI + 自定义 BaseURL + Ollama 三套跑通 | PRD §5.3 ④ |
@@ -74,3 +74,4 @@
 - 2026-09-26：会话 09 —— T-020 ✅（Web 端）Flutter 工程 13 页全量落地 + 冒烟通过；T-021/T-023/T-025 转 🟡（Mock/UI 就绪，真实联调待）
 - 2026-09-27：会话 10 —— T-021 ✅ / T-022 ✅ / T-024 ✅（Dart 侧）：真实 Provider 联调（Key→SecureStore、真实 SSE 成稿）、B/C/D 系统触发双落地、结构化热键 + 冲突检测 + macOS 原生壳（Carbon/AX/Keychain/NSPanel/StatusBar 六文件）。**回执** [`2026-09-27-01-t021-t022-t024-real-links.md`](./sessions/2026-09-27-01-t021-t022-t024-real-links.md)。`flutter analyze` 0 issue、`flutter test` 44/44、web release ✓、冒烟 15/15 PASS 0 错误；**遗留：Swift 原生壳未实机编译（Linux 沙箱无 macOS SDK）**
 - 2026-09-27：会话 11 —— T-023 ✅ / T-025 ✅：模型配置页三套真连接（OpenAI 官方 / 自定义 BaseURL / Ollama 本地，各自跑通「填 Key → 测试连接 → 拉取模型 → 成稿一次」）+ 401/429/model-not-found/wrong-BaseURL 四内联错误态；首次引导接真实权限状态（自检→打开设置→resumed 自动刷新）+ 零 Key Ollama 全链。顺带修复：4 个 provider 的 `listModels()` 裸抛 SocketException → 收敛 `networkUnreachable`（ADR-007）；Ollama 落库平台名归一化「Ollama（本地）」；零 Key 成功文案不再误提 Key。`flutter analyze` 0 issue、`flutter test` 66/66、web release ✓、冒烟 15/15 PASS 0 错误、Playwright 交互截图 14 张（I/L 页真实链路 + 内联错误态，fake Ollama 双栈 server 真连 132ms/116ms）。**回执** [`2026-09-27-02-t023-t025-real-connections-onboarding.md`](./sessions/2026-09-27-02-t023-t025-real-connections-onboarding.md)；**遗留：macOS Swift 原生壳未实机编译**
+- 2026-09-27：会话 12（Round-4）—— T-020 实机验证准备包（Linux 沙箱无 macOS SDK，**未实机编译**）：① `app/tool/macos_verify.sh` 一键验证脚本 ② `docs/macos-verify-checklist.md` 分步 checklist ③ `docs/method-channel-contract.md` MethodChannel 契约核对表（Dart vs 8 个 Swift 文件逐方法比对 + entitlements/TCC 核对）。核对发现并修复 2 处 P0：**B1** AppDelegate 双引擎（重复 RegisterGeneratedPlugins → 自研插件挂到无 Dart isolate 的引擎 → 全部 MissingPluginException）；**B2** 反向事件断线（`main.dart` 未把 `linguaflow/native` 通道传给 `SystemTriggerService` → hotkey 事件收不到）。T-011 追认收账 ✅；T-012 ✅ `pages-specs/` 15 份字段级规格。回归：analyze 0 issue、test 66/66。**回执** [`2026-09-27-03-macos-verify-prep-t012-pages-specs.md`](./sessions/2026-09-27-03-macos-verify-prep-t012-pages-specs.md)；**诚实声明：macOS 原生壳仍未实机编译，B1/B2 修复未经实机验证**

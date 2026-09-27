@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'app_store.dart';
@@ -51,9 +52,15 @@ class LfServices {
   }
 
   /// 装配（供 main 使用）：Web 预览自动降级为进程内实现。
+  ///
+  /// [nativeChannel] —— 原生 → Dart 反向事件（hotkey / overlayResult）的接收通道；
+  /// 桌面端必须传 `MethodChannel('linguaflow/native')`，否则 Swift 侧
+  /// `invokeMethod("hotkey")` 发出的事件无人接收（原生热键触发后 UI 无反应）。
+  /// Web 预览传 null（不注册 handler）。
   static LfServices bootstrap({
     required AppStore store,
     NativeBridge? bridge,
+    MethodChannel? nativeChannel,
   }) {
     final effectiveBridge = bridge ?? NoopNativeBridge();
     final manager = HotkeyManager(
@@ -61,7 +68,10 @@ class LfServices {
       platform: currentHotkeyPlatform(),
       bridge: effectiveBridge,
     );
-    final trigger = SystemTriggerService(bridge: effectiveBridge);
+    final trigger = SystemTriggerService(
+      bridge: effectiveBridge,
+      channel: nativeChannel,
+    );
     return LfServices(
       store: store,
       bridge: effectiveBridge,

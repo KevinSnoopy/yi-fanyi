@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/theme/tokens.dart';
@@ -33,6 +34,9 @@ Future<void> main() async {
     bridge: kIsWeb
         ? NoopNativeBridge()
         : FallbackNativeBridge(ChannelNativeBridge()),
+    // 原生 → Dart 反向事件（hotkey / overlayResult）必须挂到同一通道，
+    // 否则 Carbon 热键触发后 Swift 的 invokeMethod("hotkey") 无人接收
+    nativeChannel: kIsWeb ? null : const MethodChannel('linguaflow/native'),
   );
   await services.init();
 
