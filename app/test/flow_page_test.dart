@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:linguaflow/core/theme/tokens.dart';
+import 'package:linguaflow/ui/tokens/tokens.dart';
 import 'package:linguaflow/models/models.dart';
 import 'package:linguaflow/services/app_store.dart';
 import 'package:linguaflow/services/hotkeys.dart';

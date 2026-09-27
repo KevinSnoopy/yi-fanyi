@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'core/theme/tokens.dart';
+import 'ui/tokens/tokens.dart';
 import 'services/app_store.dart';
 import 'services/native_bridge.dart';
 import 'services/secure_store.dart';

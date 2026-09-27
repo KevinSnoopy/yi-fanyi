@@ -1,15 +1,15 @@
 ---
-phase: "Phase 2 · 真实代码开发（UI 主任务 T-020~T-025 全 ✅；T-011/T-012 收账完成；macOS 原生壳待实机编译）"
-stage: macos-verify-prep-and-page-specs
+phase: "Phase 2 · 真实代码开发（UI 主任务 T-020~T-025 全 ✅；T-011/T-012/T-013 收账完成；macOS 原生壳待实机编译）"
+stage: tokens-and-platform-matrix
 last_updated: 2026-09-27
-current_focus: "会话 12（Round-4）：T-020 实机验证准备包三件套（macos_verify.sh 一键脚本 + macos-verify-checklist.md 分步 checklist + method-channel-contract.md 契约核对表，Dart vs 8 Swift 文件逐方法比对 + entitlements/TCC 核对）；核对修复 2 处 P0——B1 AppDelegate 双引擎（重复 RegisterGeneratedPlugins→插件挂错引擎→MissingPluginException）、B2 反向事件断线（linguaflow/native 通道未传给 SystemTriggerService）；T-011 追认收账 ✅；T-012 ✅ pages-specs/ 15 份字段级规格（13 页 + Windows/Android 皮肤，冲突点 C1–C16 汇总待拍板）；回归 analyze 0 issue + test 66/66"
-next_action: "macOS 实机验证（用户侧跑 app/tool/macos_verify.sh，按 checklist 六项能力验证 + result-draft 回传）；可选 T-013 Design Token 落地；T-030 三端平移准备"
+current_focus: "会话 13（Round-5，B 分支：未实机验证）：T-013 ✅ Design Token 落地——Token 统一出口 app/lib/ui/tokens/（lf_scheme 浅/深色彩 + lf_dimens 几何 + lf_components 组件规格①–⑥ + barrel），删旧 core/theme/tokens.dart、迁 18 处 import，Token 全表与差异 T-A/T-B 见 tokens/README.md；M2 C1–C16 拍板决策单（二选一+建议，最小拍板集已给）；M3 T-030 三端差异矩阵（Dart 平台耦合仅 4 处，缺口集中原生壳）。回归 analyze 0 issue + test 66/66"
+next_action: "macOS 实机验证（用户侧跑 app/tool/macos_verify.sh，result-draft 回传 → Round-6 按 A 分支修 Swift：B1/B2 判定 + R1/R3/R4/R6）；用户拍板 C1–C16（decision-sheet）与 Token T-A/T-B → Agent 改代码对齐"
 blockers:
-  - "macOS 原生壳未实机编译（Linux 沙箱无 Xcode/macOS SDK，Swift 仅做语法与 API 正确性校验；B1/B2 契约修复未经实机验证）"
+  - "macOS 原生壳未实机编译（B1/B2 契约修复未经实机验证；未收到实机日志）"
+  - "pages-specs 冲突点 C1–C16 待拍板（决策单 pages-specs/decision-sheet-C1-C16.md）"
+  - "Token 层差异 T-A/T-B 待拍板（app/lib/ui/tokens/README.md）"
   - "沙盒 entitlements 拍板项（App Sandbox 与 CGEvent 合成事件张力，见 method-channel-contract.md §6，未擅改）"
-  - "pages-specs 冲突点 C1–C16 待拍板（实现为准 / 原型为准，见 pages-specs/README.md）"
-  - "真实 Key 环境未验收（本轮用 MockProviderServer/本地 fake server 覆盖协议正确性；真实 OpenAI/Anthropic Key 的联调留待实机）"
-  - "License 未定（README 标 TBD）"
+  - "真实 Key 环境未验收；License 未定（README 标 TBD）"
 has_code: true
 ---
 
@@ -31,6 +31,7 @@ has_code: true
 
 | 日期 | 会话 | 成果 |
 |---|---|---|
+| 2026-09-27 | [`2026-09-27-04-round5-tokens-c16-matrix`](./sessions/2026-09-27-04-round5-tokens-c16-matrix.md) | Round-5（B 分支）：**T-013 ✅** Design Token——统一出口 `app/lib/ui/tokens/`（lf_scheme 31 项浅/深色彩 ThemeExtension / lf_dimens 字阶圆角尺寸动效 / lf_components PRD §5.3 组件规格①–⑥ 聚合 / tokens.dart barrel），删 `core/theme/tokens.dart` 迁 18 处 import；⑤ kb 皮肤固定色、① mic 圆钮 52 改消费 Token；全表+差异 T-A/T-B 见 tokens/README.md。M2：C1–C16 决策单（pages-specs/decision-sheet-C1-C16.md，二选一+建议+最小拍板集）。M3：T-030 三端差异矩阵（docs/t030-platform-matrix.md；全库仅 kIsWeb×3 + defaultTargetPlatform×1，windows/linux/android/ios 脚手架未生成，Linux/Windows 原生缺口逐项列路径）。回归：analyze 0 issue + test 66/66（fvm 3.38.9 本机验证） |
 | 2026-09-27 | [`2026-09-27-03-macos-verify-prep-t012-pages-specs`](./sessions/2026-09-27-03-macos-verify-prep-t012-pages-specs.md) | T-020 实机验证准备包（**未实机编译**）：① `app/tool/macos_verify.sh`（双构建 + flutter run + 六项能力分步验证引导 + log 归档）② `docs/macos-verify-checklist.md`（前置→双构建→通道连通→六项→回传约定→覆盖矩阵）③ `docs/method-channel-contract.md`（secure 3 / native 11 方法 + 反向事件逐项比对 8 Swift 文件 + wire 串一致性 + 风险 R1–R9 + entitlements/TCC 核对）。修复 P0×2：B1 AppDelegate 双引擎（复用 MainFlutterWindow 唯一引擎，删重复 RegisterGeneratedPlugins）；B2 main.dart 未传 `linguaflow/native` 通道给 SystemTriggerService（反向 hotkey 事件断线）。T-011 追认收账 ✅；T-012 ✅ `pages-specs/` 15 份（13 页 + n1 Windows / n2 Android 皮肤；冲突 C1–C16 待拍板）。analyze 0 issue + test 66/66 |
 | 2026-09-27 | [`2026-09-27-02-t023-t025-real-connections-onboarding`](./sessions/2026-09-27-02-t023-t025-real-connections-onboarding.md) | T-023 ✅ / T-025 ✅：模型配置页三套真连接（OpenAI/自定义 BaseURL/Ollama 各跑通「填 Key→测试连接→拉取模型→成稿一次」，401/429/model-not-found/wrong-BaseURL 四内联错误态 + ADR-001 Key→SecureStore 链验证）；首次引导真实权限状态（自检→打开设置→resumed 自动刷新→手动重检）+ 零 Key Ollama 全链；修复 listModels 裸抛 SocketException（4 provider 收敛 networkUnreachable）+ Ollama 平台名归一化 + 零 Key 文案；66/66 测试全绿 + 冒烟 15/15 + 交互截图 14 张。遗留：Swift 未实机编译 |
 | 2026-09-27 | [`2026-09-27-01-t021-t022-t024-real-links`](./sessions/2026-09-27-01-t021-t022-t024-real-links.md) | T-021 ✅ / T-022 ✅ / T-024 ✅：真实 Provider 联调（SecureStore/Keychain + 真实 SSE + 失败错误条 + 一键降级）、B/C/D 系统触发双落地（悬浮窗/划词/静默替换 + 焦点变化终止）、结构化热键 + 三平台冲突表 + 真实重绑、macOS 原生壳六文件（Carbon 热键 / AX 注入 / Keychain / NSPanel / StatusBar / 两插件）+ 44 项测试全绿。遗留：Swift 未实机编译 |
@@ -105,6 +106,8 @@ has_code: true
 - **macOS 壳双引擎坑（B1，会话 12 修复）**：`MainFlutterWindow` nib 在 `awakeFromNib` 已调过 `RegisterGeneratedPlugins` 并建好唯一引擎；`AppDelegate.applicationDidFinishLaunching` 里再新建 FlutterViewController + 重复注册 → 自研插件挂到**无 Dart isolate 的引擎**上 → Dart 侧全部 `MissingPluginException`。正确姿势：复用 `NSApp.windows.first { $0 is MainFlutterWindow }?.contentViewController`
 - **反向事件通道坑（B2，会话 12 修复）**：Swift → Dart 的 hotkey/overlayResult 事件走 `linguaflow/native` 通道反向 invokeMethod；`main.dart` 若不把该通道传给 `bootstrap(nativeChannel:)` → `SystemTriggerService` 收不到任何事件。新增 Dart→原生能力时同步检查反向事件订阅链
 - **页面规格冲突标注约定**（会话 12，T-012）：规格以 `app/lib/ui/pages/` 实现为准；实现与原型不一致处标 ⚖️ C 编号，汇总在 `pages-specs/README.md`，**Agent 不得自行裁决，留用户拍板**
+- **本机（macOS）跑 flutter test 的代理坑**（会话 13）：系统代理（127.0.0.1:端口）会劫持 flutter_tester 的 localhost WebSocket → 全部测试 `Unable to connect to flutter_tester process: WebSocketException` 假失败。修法：`env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy ... flutter test`。另 fvm 3.38.9 可跑本项目（pubspec sdk ≥3.4.0）；字体资产缺失先 `bash app/tool/fetch_fonts.sh`
+- **Token 出口约定**（会话 13，T-013）：Token 唯一出口 `app/lib/ui/tokens/`（barrel tokens.dart：lf_scheme/lf_dimens/lf_components）；`core/theme/` 只留 `app_theme.dart`（ThemeData 组装）。新增 UI 值先查 tokens/README.md 全表，禁止页面内散落新硬编码
 
 ## 7. 给下一个 Agent 的速读路径
 

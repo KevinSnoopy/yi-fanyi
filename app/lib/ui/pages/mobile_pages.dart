@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/icons/lf_icons.dart';
-import '../../core/theme/tokens.dart';
+import '../tokens/tokens.dart';
 import '../components/common.dart';
 import '../components/phone_frames.dart';
 import '../overlays/floating_windows.dart';

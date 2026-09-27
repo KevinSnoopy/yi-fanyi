@@ -27,6 +27,8 @@
 
 ## 实现与 PRD/原型 冲突点汇总（⚖️ 待拍板 / 「实现为准」）
 
+> **Round-5 已整理为可勾选决策单**：[`decision-sheet-C1-C16.md`](decision-sheet-C1-C16.md)（二选一 + Agent 建议 + 最小拍板集），拍板请回传该文件。
+
 | # | 冲突点 | 现状 | 建议 | 出处 |
 |---|---|---|---|---|
 | C1 | H 页四个统计卡（今日调用/本月 token/本月花费/平均首字延迟）为**演示初值**，仅 `todayCalls` 随 addHistory 自增，其余恒定 | `todayCalls=42 / monthTokens=128.4 / monthCost=6.42 / avgFirstTokenMs=480` | 待拍板：P1 真实化（从 HistoryRecord 聚合）或保留演示值 | 06 |

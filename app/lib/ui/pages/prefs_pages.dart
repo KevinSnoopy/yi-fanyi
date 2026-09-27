@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/tokens.dart';
+import '../tokens/tokens.dart';
 import '../../models/models.dart';
 import '../../services/app_store.dart';
 import '../components/cards.dart';

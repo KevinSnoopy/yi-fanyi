@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'tokens.dart';
+import '../../ui/tokens/lf_dimens.dart';
+import '../../ui/tokens/lf_scheme.dart';
 
 /// 应用主题构建 —— 对齐原型视觉基调：
 /// 轻盈、无侵入、半透明质感；PingFang SC / HarmonyOS Sans + Inter 字体栈；

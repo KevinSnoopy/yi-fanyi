@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/icons/lf_icons.dart';
-import '../../core/theme/tokens.dart';
+import '../tokens/tokens.dart';
 import '../../engine/draft_pipeline.dart';
 import '../../engine/recorder_state_machine.dart';
 import '../../models/models.dart';
@@ -289,8 +289,8 @@ class _FlowPageState extends State<FlowPage> {
                     final recording = sm.phase == RecorderPhase.recording;
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 160),
-                      width: 52,
-                      height: 52,
+                      width: LfComponents.pill.micFab,
+                      height: LfComponents.pill.micFab,
                       decoration: BoxDecoration(
                         gradient: s.brandGrad,
                         shape: BoxShape.circle,

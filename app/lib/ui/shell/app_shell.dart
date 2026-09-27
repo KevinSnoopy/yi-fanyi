@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/icons/lf_icons.dart';
-import '../../core/theme/tokens.dart';
+import '../tokens/tokens.dart';
 import '../../services/app_store.dart';
 import '../../services/service_scope.dart';
 import '../components/common.dart';

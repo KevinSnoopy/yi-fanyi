@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/icons/lf_icons.dart';
-import '../../core/theme/tokens.dart';
+import '../tokens/tokens.dart';
 
 /// 品牌渐变容器（--brand-grad：135deg 蓝→紫）。
 class BrandGradBox extends StatelessWidget {

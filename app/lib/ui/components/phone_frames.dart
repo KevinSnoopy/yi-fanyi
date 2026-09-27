@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../core/icons/lf_icons.dart';
-import '../../core/theme/tokens.dart';
+import '../tokens/tokens.dart';
 
 /// 手机框 —— 原型 .phone-frame（iOS 刘海 / Android 打孔，G/M/O 三页共用）。
 class PhoneFrame extends StatelessWidget {
@@ -124,14 +124,14 @@ class IosKeyboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = LfScheme.of(context);
     return Container(
-      color: const Color(0xFFD1D4DA),
+      color: LfComponents.kb.keyboardBg,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // 工具条
           Container(
-            height: 36,
-            color: const Color(0xFFE4E6EB),
+            height: LfComponents.kb.toolbarH,
+            color: LfComponents.kb.toolbarBg,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Row(
               children: [

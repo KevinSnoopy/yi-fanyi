@@ -4,7 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/theme/tokens.dart';
+import '../tokens/tokens.dart';
 import '../../engine/translate_runner.dart';
 import '../../services/app_store.dart';
 import '../../services/hotkeys.dart';

@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../core/icons/lf_icons.dart';
-import '../../core/theme/tokens.dart';
+import '../tokens/tokens.dart';
 import '../../engine/recorder_state_machine.dart';
 
 /// 录音条 pill —— ADR-008 三态强制组件（PRD v3.2 §5.1 / §5.3 ①）。

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart' hide Badge;
 
 import '../../core/icons/lf_icons.dart';
-import '../../core/theme/tokens.dart';
+import '../tokens/tokens.dart';
 import '../../models/models.dart';
 import '../../providers/catalog.dart';
 import 'common.dart';
